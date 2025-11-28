@@ -24,10 +24,14 @@ const els = {
   eventType: document.getElementById("event-type"),
   eventStart: document.getElementById("event-start"),
   eventEnd: document.getElementById("event-end"),
+  apiBaseLabel: document.getElementById("api-base-label"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   setDefaultRange();
+  if (els.apiBaseLabel) {
+    els.apiBaseLabel.textContent = window.__API_BASE__ || "/api/v1";
+  }
   bindEvents();
   loadData();
 });

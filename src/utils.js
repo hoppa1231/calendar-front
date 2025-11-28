@@ -1,4 +1,4 @@
-export const API_BASE = "/api/v1";
+export const API_BASE = window.__API_BASE__ || "/api/v1";
 
 export function toISO(date) {
   return new Date(date).toISOString().slice(0, 10);
