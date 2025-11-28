@@ -7,7 +7,8 @@ RUN rm -rf ./*
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Статика
-COPY public/ ./public/
+# Кладём index.html в корень, чтобы nginx отдавал его как /
+COPY public/ ./
 COPY styles/ ./styles/
 COPY src/ ./src/
 COPY openapi.json ./openapi.json
