@@ -118,7 +118,7 @@ function baseChartOptions(scope) {
     responsive: true,
     plugins: {
       legend: {
-        labels: { color: "#e8f0ff" },
+        labels: { color: "#9fb2ca" },
       },
       tooltip: {
         callbacks: {

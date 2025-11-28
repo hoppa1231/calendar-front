@@ -1,0 +1,40 @@
+:root {
+    --itc-body-bg: #fff;
+    --itc-border-color: #dee2e6;
+    --itc-checkbox-color: #007960;
+    --itc-disabled-opacity: 0.5;
+    --itc-border-width: 1px;
+    --itc-checkbox-size: 0.9rem;
+    --itc-checkbox-gap: 0.5rem;
+    --itc-radius: 0.375rem;
+    --itc-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input[type=checkbox].checkbox {
+    appearance: none;
+    padding: 10px;
+    width: var(--itc-checkbox-size);
+    height: var(--itc-checkbox-size);
+    border: var(--itc-border-width) solid var(--itc-border-color);
+    border-radius: var(--itc-radius);
+    background-color: var(--itc-body-bg);
+    cursor: pointer;
+    transition: var(--itc-transition);
+    margin: 0;
+}
+
+input[type=checkbox].checkbox:checked {
+    background-color: var(--itc-checkbox-color);
+    border-color: var(--itc-checkbox-color);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
+input[type=checkbox].checkbox:disabled {
+    opacity: var(--itc-disabled-opacity);
+    cursor: not-allowed;
+}
+
+input[type=checkbox].checkbox:disabled + span {
+    opacity: var(--itc-disabled-opacity);
+    cursor: not-allowed;
+}

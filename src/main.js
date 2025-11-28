@@ -5,6 +5,7 @@ import { addDays, toISO } from "./utils.js";
 import { buildMockCalendar, buildMockWorkload } from "./mock-data.js";
 
 const state = { calendar: [], workload: null };
+const THEME_KEY = "calendar_theme";
 
 const els = {
   start: document.getElementById("start-date"),
@@ -24,10 +25,16 @@ const els = {
   eventType: document.getElementById("event-type"),
   eventStart: document.getElementById("event-start"),
   eventEnd: document.getElementById("event-end"),
+  apiBaseLabel: document.getElementById("api-base-label"),
+  themeToggle: document.getElementById("theme-toggle"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   setDefaultRange();
+  applyTheme(loadTheme());
+  if (els.apiBaseLabel) {
+    els.apiBaseLabel.textContent = window.__API_BASE__ || "/api/v1";
+  }
   bindEvents();
   loadData();
 });
@@ -58,6 +65,12 @@ function bindEvents() {
   els.createForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     await submitEvent();
+  });
+
+  els.themeToggle?.addEventListener("click", () => {
+    const nextTheme = loadTheme() === "dark" ? "light" : "dark";
+    applyTheme(nextTheme);
+    saveTheme(nextTheme);
   });
 }
 
@@ -167,4 +180,33 @@ function showMessage(text, tone = "info") {
   if (!els.message) return;
   els.message.textContent = text;
   els.message.className = `status ${tone}`;
+}
+
+function applyTheme(theme) {
+  const body = document.body;
+  if (theme === "dark") {
+    body.classList.add("theme-dark");
+    body.classList.remove("theme-light");
+    if (els.themeToggle) els.themeToggle.textContent = "Светлая тема";
+  } else {
+    body.classList.add("theme-light");
+    body.classList.remove("theme-dark");
+    if (els.themeToggle) els.themeToggle.textContent = "Тёмная тема";
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch (e) {
+    console.warn("Cannot persist theme", e);
+  }
+}
+
+function loadTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) || "light";
+  } catch (e) {
+    return "light";
+  }
 }

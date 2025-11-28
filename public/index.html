@@ -3,27 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Командный календарь</title>
+  <title>Календарь команды</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
   <link rel="stylesheet" href="./styles/styles.css">
+  <link rel="stylesheet" href="./styles/objects.css">
 </head>
 <body>
   <div class="page">
     <header class="hero">
       <div>
-        <p class="eyebrow">Планирование отпусков и загрузки</p>
-        <h1>Производственный календарь</h1>
+        <p class="eyebrow">Планирование отпусков и командировок</p>
+        <h1>Единый календарь команды</h1>
+        <p class="lede">
+          Смотрите отпуска и командировки, контролируйте загрузку и создавайте события прямо из веб‑интерфейса.
+        </p>
         <div class="hero-actions">
           <a class="btn primary" href="#calendar-section">К календарю</a>
           <a class="btn ghost" href="#workload-section">К загрузке</a>
+          <button class="chip" id="theme-toggle" type="button">Тёмная тема</button>
         </div>
       </div>
       <div class="hero-badge">
         <div class="badge-number" id="hero-employees">0</div>
         <p>человек в выборке</p>
+        <span class="sub">API: <span id="api-base-label">/api/v1</span></span>
       </div>
     </header>
     <div id="global-message" class="status"></div>
@@ -50,8 +55,8 @@
             <label>
               <span>Типы</span>
               <div class="checkbox-row">
-                <label><input type="checkbox" value="vacation" checked> Отпуска</label>
-                <label><input type="checkbox" value="business_trip" checked> Командировки</label>
+                <label><input type="checkbox" value="vacation" class="checkbox" checked> Отпуска</label>
+                <label><input type="checkbox" value="business_trip" class="checkbox" checked> Командировки</label>
               </div>
             </label>
           </form>
@@ -97,8 +102,7 @@
             </label>
             <button type="submit" class="btn primary full">Создать событие</button>
             <p class="muted small">
-              Если метод пока не реализован на сервере, вы получите понятное сообщение об ошибке.
-              Поддержка задач из Битрикса может быть добавлена в этот же блок.
+              Если бэкенд недоступен, данные будут замоканы, а форма покажет сообщение об ошибке.
             </p>
           </form>
         </div>
@@ -111,8 +115,8 @@
             </div>
           </div>
           <p class="muted">
-            Когда появится API задач из Битрикса, сюда можно добавить ленту задач и распределение часов.
-            В коде выделены точки расширения: загрузка задач и отображение их влияния на графики загрузки.
+            Когда появится API задач из Битрикса, сюда можно добавить ленту задач и влияние часов на графики.
+            В коде есть точки расширения: загрузка задач и отображение их нагрузки.
           </p>
         </div>
       </section>
@@ -173,7 +177,7 @@
           <div class="card">
             <div class="card-header">
               <h3>Таблица по людям</h3>
-              <span class="muted small">Средняя загрузка в выбранном диапазоне</span>
+              <span class="muted small">Средняя и пиковая загрузка</span>
             </div>
             <div id="workload-table" class="table"></div>
           </div>
@@ -182,6 +186,7 @@
     </main>
   </div>
 
+  <script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script type="module" src="./src/main.js"></script>
 </body>
