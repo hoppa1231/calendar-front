@@ -30,8 +30,7 @@ jobs:
       - name: Build (and optionally push) calendar-front image
         uses: docker/build-push-action@v5
         with:
-          context: ./calendar-front
-          file: ./calendar-front/Dockerfile
+          file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
