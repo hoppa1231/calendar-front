@@ -6,13 +6,12 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
-
-env:
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/calendar-front
-
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    environment: docker
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/calendar-front
 
     steps:
       - name: Checkout
