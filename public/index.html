@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Командный календарь</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+  <link rel="stylesheet" href="../styles/styles.css">
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Планирование отпусков и загрузки</p>
+        <h1>Производственный календарь</h1>
+        <div class="hero-actions">
+          <a class="btn primary" href="#calendar-section">К календарю</a>
+          <a class="btn ghost" href="#workload-section">К загрузке</a>
+        </div>
+      </div>
+      <div class="hero-badge">
+        <div class="badge-number" id="hero-employees">0</div>
+        <p>человек в выборке</p>
+      </div>
+    </header>
+    <div id="global-message" class="status"></div>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Диапазон данных</p>
+              <h2>Загрузить данные</h2>
+            </div>
+            <button class="chip" id="refresh-button">Обновить</button>
+          </div>
+          <form id="date-range-form" class="form-grid">
+            <label>
+              <span>Начало</span>
+              <input type="date" id="start-date" required>
+            </label>
+            <label>
+              <span>Окончание</span>
+              <input type="date" id="end-date" required>
+            </label>
+            <label>
+              <span>Типы</span>
+              <div class="checkbox-row">
+                <label><input type="checkbox" value="vacation" checked> Отпуска</label>
+                <label><input type="checkbox" value="business_trip" checked> Командировки</label>
+              </div>
+            </label>
+          </form>
+          <div class="quick-ranges">
+            <span>Быстрый выбор:</span>
+            <button class="chip" data-range="14">2 недели</button>
+            <button class="chip" data-range="30">Месяц</button>
+            <button class="chip" data-range="90">Квартал</button>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="dot vacation"></span> Отпуск</span>
+            <span class="legend-item"><span class="dot trip"></span> Командировка</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Новые события</p>
+              <h2>Создать отпуск/командировку</h2>
+            </div>
+            <span class="chip ghost">_</span>
+          </div>
+          <form id="create-event-form" class="form-grid">
+            <label>
+              <span>ID сотрудника</span>
+              <input type="number" id="employee-id" placeholder="101" required>
+            </label>
+            <label>
+              <span>Тип события</span>
+              <select id="event-type" required>
+                <option value="vacation">Отпуск</option>
+                <option value="business_trip">Командировка</option>
+              </select>
+            </label>
+            <label>
+              <span>Начало</span>
+              <input type="date" id="event-start" required>
+            </label>
+            <label>
+              <span>Окончание</span>
+              <input type="date" id="event-end" required>
+            </label>
+            <button type="submit" class="btn primary full">Создать событие</button>
+            <p class="muted small">
+              Если метод пока не реализован на сервере, вы получите понятное сообщение об ошибке.
+              Поддержка задач из Битрикса может быть добавлена в этот же блок.
+            </p>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Интеграция с задачами</p>
+              <h2>Планы по Bitrix</h2>
+            </div>
+          </div>
+          <p class="muted">
+            Когда появится API задач из Битрикса, сюда можно добавить ленту задач и распределение часов.
+            В коде выделены точки расширения: загрузка задач и отображение их влияния на графики загрузки.
+          </p>
+        </div>
+      </section>
+
+      <section class="content">
+        <section id="calendar-section" class="stack">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Визуализация</p>
+              <h2>Календарь отпусков и командировок</h2>
+            </div>
+            <div class="badges">
+              <span class="chip ghost" id="range-summary">—</span>
+              <span class="chip ghost" id="event-count">0 отмеченных дней</span>
+            </div>
+          </div>
+          <div class="card calendar-card">
+            <div id="year-calendar" class="year-grid"></div>
+          </div>
+        </section>
+
+        <section id="workload-section" class="stack">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Нагрузка</p>
+              <h2>Дни, недели и месяцы</h2>
+            </div>
+            <div class="badges">
+              <span class="chip ghost" id="avg-load">—</span>
+              <span class="chip ghost" id="peak-load">—</span>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Дни</h3>
+                <span class="muted small">Суммарная загрузка команды</span>
+              </div>
+              <canvas id="daily-chart"></canvas>
+            </div>
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Недели</h3>
+                <span class="muted small">Стек по людям</span>
+              </div>
+              <canvas id="weekly-chart"></canvas>
+            </div>
+            <div class="card chart-card">
+              <div class="card-header">
+                <h3>Месяцы</h3>
+                <span class="muted small">Средняя загрузка</span>
+              </div>
+              <canvas id="monthly-chart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Таблица по людям</h3>
+              <span class="muted small">Средняя загрузка в выбранном диапазоне</span>
+            </div>
+            <div id="workload-table" class="table"></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script type="module" src="../src/main.js"></script>
+</body>
+</html>

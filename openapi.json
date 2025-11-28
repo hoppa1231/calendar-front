@@ -1,0 +1,395 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OKR REINCARNATION",
+    "description": "Простое API для получения календаря отпусков/командировок и ежедневной загрузки сотрудников.",
+    "version": "1.0.3"
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "paths": {
+    "/api/v1/calendar": {
+      "get": {
+        "summary": "Get Calendar",
+        "description": "Получить календарь отпусков и командировок",
+        "operationId": "get_calendar_api_v1_calendar_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Дата начала периода (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Дата начала периода (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Дата окончания периода (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "Дата окончания периода (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarResponseItem"
+                  },
+                  "title": "Response Get Calendar Api V1 Calendar Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workload": {
+      "get": {
+        "summary": "Get Workload",
+        "description": "Получить ежедневную загрузку сотрудников",
+        "operationId": "get_workload_api_v1_workload_get",
+        "parameters": [
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Дата начала периода (YYYY-MM-DD)",
+              "title": "Start Date"
+            },
+            "description": "Дата начала периода (YYYY-MM-DD)"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Дата окончания периода (YYYY-MM-DD)",
+              "title": "End Date"
+            },
+            "description": "Дата окончания периода (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkloadResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "post": {
+        "summary": "Create Event",
+        "description": "Создать новое событие (отпуск или командировка)",
+        "operationId": "create_event_api_v1_events_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCalendarEvent"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateCalendarEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CalendarEvent": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "vacation",
+              "business_trip"
+            ],
+            "title": "Type"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "start",
+          "end"
+        ],
+        "title": "CalendarEvent"
+      },
+      "CalendarResponseItem": {
+        "properties": {
+          "employee": {
+            "$ref": "#/components/schemas/EmployeeInfo"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          }
+        },
+        "type": "object",
+        "required": [
+          "employee",
+          "events"
+        ],
+        "title": "CalendarResponseItem"
+      },
+      "CreateCalendarEvent": {
+        "properties": {
+          "employee_id": {
+            "type": "integer",
+            "title": "Employee Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "vacation",
+              "business_trip"
+            ],
+            "title": "Type"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "employee_id",
+          "type",
+          "start",
+          "end"
+        ],
+        "title": "CreateCalendarEvent"
+      },
+      "CreateCalendarEventResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "CreateCalendarEventResponse"
+      },
+      "DailyWorkload": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "percent": {
+            "type": "number",
+            "title": "Percent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "percent"
+        ],
+        "title": "DailyWorkload"
+      },
+      "EmployeeInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "EmployeeInfo"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WorkloadResponse": {
+        "properties": {
+          "employees": {
+            "items": {
+              "$ref": "#/components/schemas/WorkloadResponseItem"
+            },
+            "type": "array",
+            "title": "Employees"
+          },
+          "total": {
+            "items": {
+              "$ref": "#/components/schemas/DailyWorkload"
+            },
+            "type": "array",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "employees",
+          "total"
+        ],
+        "title": "WorkloadResponse"
+      },
+      "WorkloadResponseItem": {
+        "properties": {
+          "employee": {
+            "$ref": "#/components/schemas/EmployeeInfo"
+          },
+          "workload": {
+            "items": {
+              "$ref": "#/components/schemas/DailyWorkload"
+            },
+            "type": "array",
+            "title": "Workload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "employee",
+          "workload"
+        ],
+        "title": "WorkloadResponseItem"
+      }
+    }
+  }
+}
