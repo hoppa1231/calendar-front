@@ -20,107 +20,19 @@
           Смотрите отпуска и командировки, контролируйте загрузку и создавайте события прямо из веб‑интерфейса.
         </p>
         <div class="hero-actions">
-          <a class="btn primary" href="#calendar-section">К календарю</a>
-          <a class="btn ghost" href="#workload-section">К загрузке</a>
+          <a class="btn ghost" id="to-calendar">К календарю</a>
+          <a class="btn primary" id="to-workload">К загрузке</a>
           <button class="chip" id="theme-toggle" type="button">Тёмная тема</button>
         </div>
       </div>
       <div class="hero-badge">
         <div class="badge-number" id="hero-employees">0</div>
         <p>человек в выборке</p>
-        <span class="sub">API: <span id="api-base-label">/api/v1</span></span>
       </div>
     </header>
     <div id="global-message" class="status"></div>
 
     <main class="layout">
-      <section class="panel">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Диапазон данных</p>
-              <h2>Загрузить данные</h2>
-            </div>
-            <button class="chip" id="refresh-button">Обновить</button>
-          </div>
-          <form id="date-range-form" class="form-grid">
-            <label>
-              <span>Начало</span>
-              <input type="date" id="start-date" required>
-            </label>
-            <label>
-              <span>Окончание</span>
-              <input type="date" id="end-date" required>
-            </label>
-            <label>
-              <span>Типы</span>
-              <div class="checkbox-row">
-                <label><input type="checkbox" value="vacation" class="checkbox" checked> Отпуска</label>
-                <label><input type="checkbox" value="business_trip" class="checkbox" checked> Командировки</label>
-              </div>
-            </label>
-          </form>
-          <div class="quick-ranges">
-            <span>Быстрый выбор:</span>
-            <button class="chip" data-range="14">2 недели</button>
-            <button class="chip" data-range="30">Месяц</button>
-            <button class="chip" data-range="90">Квартал</button>
-          </div>
-          <div class="legend">
-            <span class="legend-item"><span class="dot vacation"></span> Отпуск</span>
-            <span class="legend-item"><span class="dot trip"></span> Командировка</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Новые события</p>
-              <h2>Создать отпуск/командировку</h2>
-            </div>
-            <span class="chip ghost">_</span>
-          </div>
-          <form id="create-event-form" class="form-grid">
-            <label>
-              <span>ID сотрудника</span>
-              <input type="number" id="employee-id" placeholder="101" required>
-            </label>
-            <label>
-              <span>Тип события</span>
-              <select id="event-type" required>
-                <option value="vacation">Отпуск</option>
-                <option value="business_trip">Командировка</option>
-              </select>
-            </label>
-            <label>
-              <span>Начало</span>
-              <input type="date" id="event-start" required>
-            </label>
-            <label>
-              <span>Окончание</span>
-              <input type="date" id="event-end" required>
-            </label>
-            <button type="submit" class="btn primary full">Создать событие</button>
-            <p class="muted small">
-              Если бэкенд недоступен, данные будут замоканы, а форма покажет сообщение об ошибке.
-            </p>
-          </form>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Интеграция с задачами</p>
-              <h2>Планы по Bitrix</h2>
-            </div>
-          </div>
-          <p class="muted">
-            Когда появится API задач из Битрикса, сюда можно добавить ленту задач и влияние часов на графики.
-            В коде есть точки расширения: загрузка задач и отображение их нагрузки.
-          </p>
-        </div>
-      </section>
-
       <section class="content">
         <section id="calendar-section" class="stack">
           <div class="section-header">
@@ -129,6 +41,42 @@
               <h2>Календарь отпусков и командировок</h2>
             </div>
             <div class="badges">
+              <div class="card" style="display: none;">
+                <div class="card-header">
+                  <div>
+                    <p class="eyebrow">Диапазон данных</p>
+                    <h2>Загрузить данные</h2>
+                  </div>
+                  <button class="chip" id="refresh-button">Обновить</button>
+                </div>
+                <form id="date-range-form" class="form-grid">
+                  <label>
+                    <span>Начало</span>
+                    <input type="date" id="start-date" required>
+                  </label>
+                  <label>
+                    <span>Окончание</span>
+                    <input type="date" id="end-date" required>
+                  </label>
+                  <label>
+                    <span>Типы</span>
+                    <div class="checkbox-row">
+                      <label><input type="checkbox" value="vacation" class="checkbox" checked> Отпуска</label>
+                      <label><input type="checkbox" value="business_trip" class="checkbox" checked> Командировки</label>
+                    </div>
+                  </label>
+                </form>
+                <div class="quick-ranges">
+                  <span>Быстрый выбор:</span>
+                  <button class="chip" data-range="14">2 недели</button>
+                  <button class="chip" data-range="30">Месяц</button>
+                  <button class="chip" data-range="90">Квартал</button>
+                </div>
+                <div class="legend">
+                  <span class="legend-item"><span class="dot vacation"></span> Отпуск</span>
+                  <span class="legend-item"><span class="dot trip"></span> Командировка</span>
+                </div>
+              </div>
               <span class="chip ghost" id="range-summary">—</span>
               <span class="chip ghost" id="event-count">0 отмеченных дней</span>
             </div>

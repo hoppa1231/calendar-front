@@ -26,6 +26,8 @@ const els = {
   eventStart: document.getElementById("event-start"),
   eventEnd: document.getElementById("event-end"),
   apiBaseLabel: document.getElementById("api-base-label"),
+  btnToCalendar: document.getElementById("to-calendar"),
+  btnToWorkload: document.getElementById("to-workload"),
   themeToggle: document.getElementById("theme-toggle"),
 };
 
@@ -67,6 +69,22 @@ function bindEvents() {
     await submitEvent();
   });
 
+  els.btnToCalendar?.addEventListener("click", () => {
+    els.btnToCalendar.classList.add("ghost");
+    els.btnToCalendar.classList.remove("primary");
+
+    els.btnToWorkload.classList.add("primary");
+    els.btnToWorkload.classList.remove("ghost");
+  });
+
+  els.btnToWorkload?.addEventListener("click", () => {
+    els.btnToWorkload.classList.add("ghost");
+    els.btnToWorkload.classList.remove("primary");
+
+    els.btnToCalendar.classList.add("primary");
+    els.btnToCalendar.classList.remove("ghost");
+  });
+
   els.themeToggle?.addEventListener("click", () => {
     const nextTheme = loadTheme() === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
@@ -76,8 +94,8 @@ function bindEvents() {
 
 function setDefaultRange() {
   const today = new Date();
-  const end = addDays(today, 30);
-  const start = addDays(today, -14);
+  const start = new Date(today.getFullYear(), 0, 1);
+  const end = new Date(today.getFullYear(), 11, 31);
   if (els.start) els.start.value = toISO(start);
   if (els.end) els.end.value = toISO(end);
   if (els.eventStart) els.eventStart.value = toISO(today);

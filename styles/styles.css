@@ -76,6 +76,9 @@ a {
 }
 
 .hero-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: var(--surface-2);
   border-radius: 18px;
   padding: 14px;
@@ -95,8 +98,8 @@ a {
 }
 
 .layout {
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  /* display: grid;
+  grid-template-columns: 320px 1fr; */
   gap: 24px;
   margin-top: 24px;
 }
@@ -153,7 +156,7 @@ h2, h3 {
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform 0.8s ease, box-shadow 0.3s ease, background 0.2s ease;
 }
 
 .btn.primary {
@@ -167,6 +170,7 @@ h2, h3 {
   color: var(--text);
   background: transparent;
 }
+.btn.ghost:hover { transform: none; }
 
 .btn.full {
   width: 100%;
