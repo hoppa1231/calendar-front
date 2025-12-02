@@ -201,6 +201,10 @@ h2, h3 {
 .chip.ghost {
   background: rgba(255, 255, 255, 0.03);
 }
+.chip-filter {
+  display: flex;
+  gap: 0.5rem;
+}
 
 .form-grid {
   display: grid;

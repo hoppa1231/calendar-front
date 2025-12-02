@@ -82,7 +82,8 @@ function renderCharts(workload) {
           borderColor: "rgba(55, 208, 178, 0.9)",
           backgroundColor: "rgba(55, 208, 178, 0.25)",
           fill: true,
-          tension: 0.25,
+          tension: 0.5,
+          pointRadius: 0,
         },
       ],
     },
@@ -121,6 +122,9 @@ function baseChartOptions(scope) {
         labels: { color: "#9fb2ca" },
       },
       tooltip: {
+        enabled: true,
+        mode: "nearest",
+        intersect: false,
         callbacks: {
           label: (ctx) => `${ctx.parsed.y}%`,
         },

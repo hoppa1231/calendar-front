@@ -44,9 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function bindEvents() {
-  els.refresh?.addEventListener("click", (e) => {
+  els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
-    loadData();
+    els.refresh.children[0].classList.add("spin");
+    await loadData();
+    await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 500ms
+    els.refresh.children[0].classList.remove("spin");
   });
 
   els.types.forEach((checkbox) =>

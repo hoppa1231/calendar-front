@@ -1,4 +1,4 @@
-import { toISO, formatDate } from "./utils.js";
+import { toISO, formatDate, icons } from "./utils.js";
 
 const monthNames = [
   "Янв",
@@ -31,8 +31,12 @@ export function renderCalendarViews(data, filters, els) {
 
   if (els.heroEmployees) els.heroEmployees.textContent = String(employees.size);
   if (els.eventCount) els.eventCount.textContent = `${dayStats.size} отмеченных дней`;
-  if (els.rangeSummary)
+  if (els.rangeSummary) {
     els.rangeSummary.textContent = buildRangeSummary(filters.start, filters.end);
+    if (els.rangeSummary.classList.contains("chip-filter")) {
+      els.rangeSummary.innerHTML += icons.filter;
+    }
+  }
 
   renderYearGrid(dayStats, filters.start);
 }
@@ -42,8 +46,9 @@ function buildRangeSummary(start, end) {
   const startDate = new Date(start);
   const endDate = new Date(end);
   const diff = Math.round((endDate - startDate) / 86400000) + 1;
-  return `${formatDate(startDate)} — ${formatDate(endDate)} · ${diff} дн.`;
+  return `${formatDate(startDate)} — ${formatDate(endDate)} · ${diff} дн. `;
 }
+
 
 function buildDayStats(data) {
   const stats = new Map();

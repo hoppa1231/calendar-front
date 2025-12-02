@@ -38,3 +38,10 @@ input[type=checkbox].checkbox:disabled + span {
     opacity: var(--itc-disabled-opacity);
     cursor: not-allowed;
 }
+
+h4 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
