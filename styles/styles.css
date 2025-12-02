@@ -115,6 +115,7 @@ a {
   flex-direction: column;
   gap: 16px;
   padding-bottom: 50px;
+  width: 96vw;
 }
 
 .card {
@@ -169,6 +170,7 @@ h2, h3 {
   border: 1px solid var(--border);
   color: var(--text);
   background: transparent;
+  cursor: default;
 }
 .btn.ghost:hover { transform: none; }
 
@@ -268,6 +270,12 @@ input:focus, select:focus {
 
 .legend .trip {
   background: #f4b23d;
+}
+
+.slide-section {
+  position: relative;
+  width: 208.5%;
+  transition: transform 0.5s ease-in-out;
 }
 
 .section-header {

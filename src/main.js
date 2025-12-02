@@ -29,6 +29,7 @@ const els = {
   btnToCalendar: document.getElementById("to-calendar"),
   btnToWorkload: document.getElementById("to-workload"),
   themeToggle: document.getElementById("theme-toggle"),
+  slideSection: document.getElementById("slide-section"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -75,6 +76,8 @@ function bindEvents() {
 
     els.btnToWorkload.classList.add("primary");
     els.btnToWorkload.classList.remove("ghost");
+
+    els.slideSection.style.transform = "translateX(0%)";
   });
 
   els.btnToWorkload?.addEventListener("click", () => {
@@ -83,6 +86,8 @@ function bindEvents() {
 
     els.btnToCalendar.classList.add("primary");
     els.btnToCalendar.classList.remove("ghost");
+
+    els.slideSection.style.transform = "translateX(-52%)";
   });
 
   els.themeToggle?.addEventListener("click", () => {
