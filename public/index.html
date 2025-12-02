@@ -50,7 +50,7 @@
                 <h2>Календарь отпусков и командировок</h2>
               </div>
               <div class="badges">
-                <div class="card" style="display: none;">
+                <div id="range-change" class="card float-box" style="display: none;">
                   <div class="card-header">
                     <div>
                       <p class="eyebrow">Диапазон данных</p>
@@ -75,11 +75,14 @@
                       </div>
                     </label>
                   </form>
-                  <div class="quick-ranges">
-                    <span>Быстрый выбор:</span>
-                    <button class="chip" data-range="14">2 недели</button>
-                    <button class="chip" data-range="30">Месяц</button>
-                    <button class="chip" data-range="90">Квартал</button>
+                  <div class="quick-ranges fl-col">
+                    <span>Быстрый выбор</span>
+                    <div class="chip-container"> 
+                      <button class="chip" data-range="14">2 недели</button>
+                      <button class="chip" data-range="30">Месяц</button>
+                      <button class="chip" data-range="90">Квартал</button>
+                      <button class="chip" data-range="365">Год</button>
+                    </div>
                   </div>
                   <div class="legend">
                     <span class="legend-item"><span class="dot vacation"></span> Отпуск</span>

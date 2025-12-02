@@ -134,6 +134,11 @@ a {
   margin-bottom: 12px;
 }
 
+.float-box {
+  position: absolute;
+  top: 3rem;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -237,9 +242,7 @@ input:focus, select:focus {
 }
 
 .quick-ranges {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 4px;
   flex-wrap: wrap;
   margin: 10px 0 4px;
   color: var(--muted);

@@ -15,6 +15,7 @@ const els = {
   quickRange: [...document.querySelectorAll(".quick-ranges .chip[data-range]")],
   heroEmployees: document.getElementById("hero-employees"),
   rangeSummary: document.getElementById("range-summary"),
+  rangeChange: document.getElementById("range-change"),
   eventCount: document.getElementById("event-count"),
   avgLoad: document.getElementById("avg-load"),
   peakLoad: document.getElementById("peak-load"),
@@ -94,6 +95,11 @@ function bindEvents() {
     const nextTheme = loadTheme() === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
     saveTheme(nextTheme);
+  });
+
+  els.rangeSummary?.addEventListener("click", () => {
+    els.rangeChange.style.display =
+      els.rangeChange.style.display === "none" ? "block" : "none";
   });
 }
 

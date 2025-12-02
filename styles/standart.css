@@ -1,6 +1,10 @@
 .flex {
     display: flex;
 }
+.fl-col {
+    display: flex;
+    flex-direction: column;
+}
 
 .gap-128 {
     gap: 128px;
