@@ -389,6 +389,7 @@ input:focus, select:focus {
   align-items: center;
   gap: 6px;
   background: var(--surface);
+  cursor: pointer;
 }
 
 .day.placeholder {
@@ -466,6 +467,28 @@ tr:last-child td {
   flex-wrap: wrap;
   margin-top: 6px;
 }
+
+.tooltip {
+  position: fixed;           /* чтобы легко позиционировать около курсора */
+  padding: 6px 10px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border-radius: 4px;
+  pointer-events: none;      /* не перехватывает мышь */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  z-index: 9999;
+  max-width: 240px;
+  box-sizing: border-box;
+}
+
+.tooltip_visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 
 @media (max-width: 1100px) {
   .layout {

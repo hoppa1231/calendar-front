@@ -29,6 +29,7 @@ export function renderCalendarViews(data, filters, els) {
 
   const dayStats = buildDayStats(filtered);
   const employees = new Set(filtered.map((item) => item.employee.id));
+  // TODO: show more detailed tooltip info
 
   if (els.heroEmployees) els.heroEmployees.textContent = String(employees.size);
   if (els.eventCount) els.eventCount.textContent = `${dayStats.size} отмеченных дней`;

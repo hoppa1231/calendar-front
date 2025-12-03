@@ -38,6 +38,7 @@ const els = {
   employeeSelect: document.getElementById("employee-filter"),
   applyFilter: document.getElementById("apply-filter"),
   resetFilter: document.getElementById("reset-filter"),
+  tooltip: document.getElementById("tooltip"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -51,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function bindEvents() {
+  bindTooltipEvents();
+
   els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
     els.refresh.children[0]?.classList.add("spin");
@@ -415,4 +418,57 @@ function filterWorkload(workload, employeeIds) {
   });
 
   return { employees: filteredEmployees, total };
+}
+
+function bindTooltipEvents() {
+  let delayTimeout = null;
+  document.addEventListener("mouseover", (e) => {
+    const t = e.target.closest(".day.active");
+    if (!t) return;
+
+    clearTimeout(delayTimeout);
+    delayTimeout = setTimeout(() => {
+      tooltip.textContent = t.dataset.tooltip || "пустышка";
+      tooltip.classList.add("tooltip_visible");
+      tooltip.setAttribute('aria-hidden', 'false');
+    }, 500);
+
+    positionTooltip(e);
+  });
+
+  document.addEventListener("mouseout", (e) => {
+    if (e.target.closest(".day.active") && 
+        !e.relatedTarget?.closest(".day.active")) {
+      clearTimeout(delayTimeout);
+      tooltip.classList.remove("tooltip_visible");
+      tooltip.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!tooltip.classList.contains('tooltip_visible')) return;
+    positionTooltip(e);
+  });
+}
+
+function positionTooltip(e) {
+  const offset = 12; // отступ от курсора
+  let x = e.clientX + offset;
+  let y = e.clientY + offset;
+
+  const ttRect = tooltip.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth;
+  const vh = document.documentElement.clientHeight;
+
+  // если не помещается справа — переносим влево
+  if (x + ttRect.width > vw) {
+    x = e.clientX - ttRect.width - offset;
+  }
+  // если не помещается снизу — поднимаем выше
+  if (y + ttRect.height > vh) {
+    y = e.clientY - ttRect.height - offset;
+  }
+
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
 }
