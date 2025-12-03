@@ -1,8 +1,8 @@
-import { fetchCalendar, fetchWorkload, createEvent } from "./api.js";
+import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent } from "./api.js";
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO } from "./utils.js";
-import { buildMockCalendar, buildMockWorkload } from "./mock-data.js";
+import { buildMockCalendar, buildMockWorkload, buildMockDepartments, buildMockEmployees } from "./mock-data.js";
 
 const state = { calendar: [], workload: null };
 const THEME_KEY = "calendar_theme";
@@ -13,6 +13,9 @@ const els = {
   refresh: document.getElementById("refresh-button"),
   types: [...document.querySelectorAll('input[type="checkbox"]')],
   quickRange: [...document.querySelectorAll(".quick-ranges .chip[data-range]")],
+  selectZeros: [...document.querySelectorAll(".select-zero")],
+  cardBodyLoad: document.getElementById("card-body-load"),
+  cardBodyFilter: document.getElementById("card-body-filter"),
   heroEmployees: document.getElementById("hero-employees"),
   rangeSummary: document.getElementById("range-summary"),
   rangeChange: document.getElementById("range-change"),
@@ -31,10 +34,14 @@ const els = {
   btnToWorkload: document.getElementById("to-workload"),
   themeToggle: document.getElementById("theme-toggle"),
   slideSection: document.getElementById("slide-section"),
+  departmentSelect: document.getElementById("department-filter"),
+  employeeSelect: document.getElementById("employee-filter"),
+  applyFilter: document.getElementById("apply-filter"),
+  resetFilter: document.getElementById("reset-filter"),
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  setDefaultRange();
+  setDefault();
   applyTheme(loadTheme());
   if (els.apiBaseLabel) {
     els.apiBaseLabel.textContent = window.__API_BASE__ || "/api/v1";
@@ -46,16 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
 function bindEvents() {
   els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
-    els.refresh.children[0].classList.add("spin");
+    els.refresh.children[0]?.classList.add("spin");
     await loadData();
     await new Promise(resolve => setTimeout(resolve, 100)); // Wait for 500ms
     els.refresh.children[0].classList.remove("spin");
   });
 
   els.types.forEach((checkbox) =>
-    checkbox.addEventListener("change", () => {
-      renderCalendar();
-    })
+    checkbox.addEventListener("change", () => renderCalendar())
   );
 
   els.quickRange.forEach((button) => {
@@ -101,9 +106,70 @@ function bindEvents() {
   });
 
   els.rangeSummary?.addEventListener("click", () => {
-    els.rangeChange.style.display =
-      els.rangeChange.style.display === "none" ? "block" : "none";
+    if (els.rangeChange) {
+      const visible = els.rangeChange.style.display === "block";
+      els.rangeChange.style.display = visible ? "none" : "block";
+    }
   });
+
+  els.departmentSelect?.addEventListener("change", () => {
+    state.selectedDepartment = parseSelectNumber(els.departmentSelect.value);
+    syncEmployeeSelection();
+    populateEmployeeSelect();
+    renderCalendar();
+    renderWorkload();
+  });
+
+  els.employeeSelect?.addEventListener("change", () => {
+    state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
+    renderCalendar();
+    renderWorkload();
+  });
+
+  els.applyFilter?.addEventListener("click", () => {
+    state.selectedDepartment = parseSelectNumber(els.departmentSelect.value);
+    state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
+    console.log("Applying filter:", state.selectedDepartment, state.selectedEmployee);
+    syncEmployeeSelection();
+    renderCalendar();
+    renderWorkload();
+    showMessage("Фильтры применены", "success");
+  });
+
+  els.resetFilter?.addEventListener("click", () => {
+    state.selectedDepartment = null;
+    state.selectedEmployee = null;
+    populateDepartmentSelect();
+    populateEmployeeSelect();
+    renderCalendar();
+    renderWorkload();
+    showMessage("Фильтры сброшены", "info");
+  });
+}
+
+function parseSelectNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+}
+
+function setDefault() {
+  els.selectZeros.forEach((select) => {
+    const options = setDefaultCard(select);
+    select.addEventListener("click", () => {
+      const currentText = select.querySelector("h4").textContent;
+      const nextText = options.find((opt) => opt !== currentText) || options[0];
+      select.querySelector("h4").textContent = nextText;
+
+      if (nextText === options[1]) {
+        if (els.cardBodyLoad) els.cardBodyLoad.style.display = "none";
+        if (els.cardBodyFilter) els.cardBodyFilter.style.display = "block";
+      } else {
+        if (els.cardBodyLoad) els.cardBodyLoad.style.display = "block";
+        if (els.cardBodyFilter) els.cardBodyFilter.style.display = "none";
+      }
+    });
+  });
+  setDefaultRange();
 }
 
 function setDefaultRange() {
@@ -112,8 +178,12 @@ function setDefaultRange() {
   const end = new Date(today.getFullYear(), 11, 31);
   if (els.start) els.start.value = toISO(start);
   if (els.end) els.end.value = toISO(end);
-  if (els.eventStart) els.eventStart.value = toISO(today);
-  if (els.eventEnd) els.eventEnd.value = toISO(addDays(today, 5));
+}
+
+function setDefaultCard(select) {
+  const options = JSON.parse(select.dataset.options || '["Option 1", "Option 2"]');
+  select.innerHTML = "<h4>" + options[0] + "</h4>";
+  return options;
 }
 
 async function loadData() {
@@ -129,29 +199,99 @@ async function loadData() {
   showMessage("Обновляем данные…", "info");
   let usedMock = false;
   try {
-    const [calendar, workload] = await Promise.all([
+    const [departments, employees, calendar, workload] = await Promise.all([
+      fetchDepartments(),
+      fetchEmployees(),
       fetchCalendar(start, end),
       fetchWorkload(start, end),
     ]);
+    state.departments = departments || [];
+    state.employees = employees || [];
     state.calendar = calendar || [];
     state.workload = workload || null;
   } catch (err) {
     console.error(err);
     usedMock = true;
-    state.calendar = buildMockCalendar(start, end);
-    state.workload = buildMockWorkload(start, end);
+    state.departments = buildMockDepartments();
+    state.employees = buildMockEmployees();
+    state.calendar = buildMockCalendar(start, end, state.employees);
+    state.workload = buildMockWorkload(start, end, state.employees);
   }
 
+  syncSelections();
+  populateDepartmentSelect();
+  populateEmployeeSelect();
+
   renderCalendar();
-  renderWorkloadViews(state.workload, {
-    avgLoad: els.avgLoad,
-    peakLoad: els.peakLoad,
-    workloadTable: els.workloadTable,
-  });
+  renderWorkload();
+
   showMessage(
     usedMock ? "Сервер недоступен, показаны мок-данные" : "Готово",
     usedMock ? "warning" : "success"
   );
+}
+
+function populateDepartmentSelect() {
+  if (!els.departmentSelect) return;
+  const current = state.selectedDepartment;
+  els.departmentSelect.innerHTML = `<option value="">Все отделы</option>`;
+  state.departments.forEach((dep) => {
+    const opt = document.createElement("option");
+    opt.value = String(dep.id);
+    opt.textContent = dep.name;
+    if (dep.id === current) opt.selected = true;
+    els.departmentSelect.appendChild(opt);
+  });
+}
+
+function populateEmployeeSelect() {
+  if (!els.employeeSelect) return;
+  const allowed = getEmployeesByDepartment();
+  const current = state.selectedEmployee;
+  els.employeeSelect.innerHTML = `<option value="">Все сотрудники</option>`;
+  allowed.forEach((emp) => {
+    const opt = document.createElement("option");
+    opt.value = String(emp.id);
+    opt.textContent = emp.full_name;
+    if (emp.id === current) opt.selected = true;
+    els.employeeSelect.appendChild(opt);
+  });
+  // Если выбранный сотрудник не подходит под текущий отдел — сбросить
+  const stillValid = allowed.some((emp) => emp.id === current);
+  if (!stillValid) {
+    state.selectedEmployee = null;
+    els.employeeSelect.value = "";
+  }
+}
+
+function getEmployeesByDepartment() {
+  if (!state.selectedDepartment) return state.employees;
+  return state.employees.filter((emp) => emp.department_id === state.selectedDepartment);
+}
+
+function getSelectedEmployeeIds() {
+  if (state.selectedEmployee) return [state.selectedEmployee];
+  return getEmployeesByDepartment().map((emp) => emp.id);
+}
+
+function syncSelections() {
+  // Отфильтровать отдел
+  const depExists = state.selectedDepartment
+    ? state.departments.some((d) => d.id === state.selectedDepartment)
+    : true;
+  if (!depExists) state.selectedDepartment = null;
+  // Отфильтровать сотрудника
+  const allowed = getEmployeesByDepartment();
+  if (state.selectedEmployee && !allowed.some((e) => e.id === state.selectedEmployee)) {
+    state.selectedEmployee = null;
+  }
+}
+
+function syncEmployeeSelection() {
+  const allowed = getEmployeesByDepartment();
+  if (state.selectedEmployee && !allowed.some((e) => e.id === state.selectedEmployee)) {
+    state.selectedEmployee = null;
+  }
 }
 
 function renderCalendar() {
@@ -161,6 +301,7 @@ function renderCalendar() {
       selectedTypes: getSelectedTypes(),
       start: els.start?.value,
       end: els.end?.value,
+      employeeIds: getSelectedEmployeeIds(),
     },
     {
       heroEmployees: els.heroEmployees,
@@ -168,6 +309,14 @@ function renderCalendar() {
       rangeSummary: els.rangeSummary,
     }
   );
+}
+
+function renderWorkload() {
+  renderWorkloadViews(filterWorkload(state.workload, getSelectedEmployeeIds()), {
+    avgLoad: els.avgLoad,
+    peakLoad: els.peakLoad,
+    workloadTable: els.workloadTable,
+  });
 }
 
 function getSelectedTypes() {
@@ -223,7 +372,7 @@ function applyTheme(theme) {
   } else {
     body.classList.add("theme-light");
     body.classList.remove("theme-dark");
-    if (els.themeToggle) els.themeToggle.textContent = "Тёмная тема";
+    if (els.themeToggle) els.themeToggle.textContent = "Темная тема";
   }
 }
 
@@ -241,4 +390,29 @@ function loadTheme() {
   } catch (e) {
     return "light";
   }
+}
+
+function filterWorkload(workload, employeeIds) {
+  if (!workload || !workload.employees) return workload;
+  const allowed = new Set(employeeIds || []);
+  if (!allowed.size || allowed.size === workload.employees.length) return workload;
+
+  const filteredEmployees = workload.employees.filter((emp) =>
+    allowed.has(emp.employee.id)
+  );
+
+  if (!filteredEmployees.length) {
+    return { employees: [], total: [] };
+  }
+
+  const total = workload.total.map((item, index) => {
+    const sum = filteredEmployees.reduce(
+      (acc, emp) => acc + (emp.workload?.[index]?.percent || 0),
+      0
+    );
+    const avg = sum / filteredEmployees.length;
+    return { date: item.date, percent: Number(avg.toFixed(1)) };
+  });
+
+  return { employees: filteredEmployees, total };
 }

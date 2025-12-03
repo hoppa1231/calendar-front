@@ -1,12 +1,10 @@
 import { API_BASE } from "./utils.js";
 
-async function request(url, options, errorMessage) {
+async function request(url, options = {}, errorMessage) {
   const res = await fetch(url, options);
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(
-      `${errorMessage || "Ошибка запроса"}. Ответ: ${text || res.status}`
-    );
+    throw new Error(`${errorMessage || "Запрос завершился ошибкой"}. Ответ: ${text || res.status}`);
   }
   if (res.status === 204) return null;
   return res.json();
@@ -14,12 +12,22 @@ async function request(url, options, errorMessage) {
 
 export function fetchCalendar(start, end) {
   const url = `${API_BASE}/calendar?start_date=${start}&end_date=${end}`;
-  return request(url, {}, "Не удалось получить календарь");
+  return request(url, {}, "Не удалось получить события календаря");
 }
 
 export function fetchWorkload(start, end) {
   const url = `${API_BASE}/workload?start_date=${start}&end_date=${end}`;
-  return request(url, {}, "Не удалось получить загрузку");
+  return request(url, {}, "Не удалось получить данные по загрузке");
+}
+
+export function fetchDepartments() {
+  const url = `${API_BASE}/departments`;
+  return request(url, {}, "Не удалось получить отделы");
+}
+
+export function fetchEmployees() {
+  const url = `${API_BASE}/employees`;
+  return request(url, {}, "Не удалось получить сотрудников");
 }
 
 export function createEvent(payload) {

@@ -19,10 +19,11 @@ const weekdayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export function renderCalendarViews(data, filters, els) {
   const selectedTypes = filters.selectedTypes || [];
+  const employeesFilter = filters.employeeIds || [];
   const filtered = (data || [])
     .map((item) => ({
       ...item,
-      events: item.events.filter((e) => selectedTypes.includes(e.type)),
+      events: item.events.filter((e) => selectedTypes.includes(e.type) && employeesFilter.length === 0 ? true : employeesFilter.includes(item.employee.id)),
     }))
     .filter((item) => item.events.length > 0);
 

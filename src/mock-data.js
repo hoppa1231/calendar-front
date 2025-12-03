@@ -1,20 +1,36 @@
 import { addDays, toISO } from "./utils.js";
 
-const MOCK_EMPLOYEES = [
-  { id: 101, full_name: "Алексей Смирнов" },
-  { id: 102, full_name: "Мария Иванова" },
-  { id: 103, full_name: "Игорь Кузнецов" },
-  { id: 104, full_name: "Дарья Павлова" },
+export const MOCK_DEPARTMENTS = [
+  { id: 1, name: "Разработка" },
+  { id: 2, name: "Продажи" },
+  { id: 3, name: "Маркетинг" },
+  { id: 4, name: "Поддержка" },
 ];
 
-export function buildMockCalendar(start, end) {
+export const MOCK_EMPLOYEES = [
+  { id: 101, full_name: "Анна Петрова", department_id: 1 },
+  { id: 102, full_name: "Игорь Смирнов", department_id: 1 },
+  { id: 103, full_name: "Елена Орлова", department_id: 2 },
+  { id: 104, full_name: "Дмитрий Ковалёв", department_id: 3 },
+  { id: 105, full_name: "Мария Соколова", department_id: 4 },
+  { id: 106, full_name: "Сергей Иванов", department_id: 2 },
+];
+
+export function buildMockDepartments() {
+  return [...MOCK_DEPARTMENTS];
+}
+
+export function buildMockEmployees() {
+  return [...MOCK_EMPLOYEES];
+}
+
+export function buildMockCalendar(start, end, employees = MOCK_EMPLOYEES) {
   const startDate = new Date(start);
   const endDate = new Date(end);
   const daysCount = Math.max(1, Math.round((endDate - startDate) / 86400000));
 
-  return MOCK_EMPLOYEES.map((emp, idx) => {
+  return employees.map((emp, idx) => {
     const events = [];
-    // Сделаем по одной командировке и одному отпуску на сотрудника, чтобы увидеть заполнение
     const vacStart = addDays(startDate, (idx * 5) % daysCount);
     const vacEnd = addDays(vacStart, 4);
     if (vacStart <= endDate) {
@@ -35,17 +51,14 @@ export function buildMockCalendar(start, end) {
       });
     }
 
-    return {
-      employee: emp,
-      events,
-    };
+    return { employee: emp, events };
   });
 }
 
-export function buildMockWorkload(start, end) {
+export function buildMockWorkload(start, end, employees = MOCK_EMPLOYEES) {
   const range = buildRange(start, end);
 
-  const employees = MOCK_EMPLOYEES.map((emp, idx) => {
+  const employeesWithLoad = employees.map((emp, idx) => {
     const workload = range.map((date, i) => ({
       date,
       percent: clampPercent(40 + (idx + 1) * 8 + Math.sin(i / 3 + idx) * 20),
@@ -54,12 +67,12 @@ export function buildMockWorkload(start, end) {
   });
 
   const total = range.map((date, i) => {
-    const sum = employees.reduce((acc, emp) => acc + emp.workload[i].percent, 0);
-    const avg = sum / employees.length;
+    const sum = employeesWithLoad.reduce((acc, emp) => acc + emp.workload[i].percent, 0);
+    const avg = sum / employeesWithLoad.length;
     return { date, percent: clampPercent(avg) };
   });
 
-  return { employees, total };
+  return { employees: employeesWithLoad, total };
 }
 
 function buildRange(start, end) {

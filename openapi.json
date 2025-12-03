@@ -163,6 +163,65 @@
           }
         }
       }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "summary": "Get Departments",
+        "description": "Получить список отделов",
+        "operationId": "get_departments_api_v1_departments_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Get Departments Api V1 Departments Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employees": {
+      "get": {
+        "summary": "Get Employees",
+        "description": "Получить список сотрудников",
+        "operationId": "get_employees_api_v1_employees_get",
+        "parameters": [
+          {
+            "name": "department",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Название отдела для фильтрации сотрудников",
+              "title": "Department"
+            },
+            "description": "Название отдела для фильтрации сотрудников"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmployeeInfo"
+                  },
+                  "title": "Response Get Employees Api V1 Employees Get"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -291,6 +350,10 @@
           "full_name": {
             "type": "string",
             "title": "Full Name"
+          },
+          "department": {
+            "type": "string",
+            "title": "Department"
           }
         },
         "type": "object",
