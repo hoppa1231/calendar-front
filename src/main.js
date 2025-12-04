@@ -228,14 +228,17 @@ async function loadData() {
     ]);
     state.departments = departments || [];
     state.employees = employees || [];
-    state.calendar = calendar || [];
+    state.calendar = mergeLocalEventsIntoCalendar(calendar || [], loadLocalEvents());
     state.workload = workload || null;
   } catch (err) {
     console.error(err);
     usedMock = true;
     state.departments = buildMockDepartments();
     state.employees = buildMockEmployees();
-    state.calendar = buildMockCalendar(start, end, state.employees);
+    state.calendar = mergeLocalEventsIntoCalendar(
+      buildMockCalendar(start, end, state.employees),
+      loadLocalEvents()
+    );
     state.workload = buildMockWorkload(start, end, state.employees);
   }
 
@@ -385,11 +388,16 @@ async function submitEvent() {
   showMessage("Отправляем событие…", "info");
   try {
     const result = await createEvent(payload);
-    showMessage(`Событие создано (id: ${result?.id || "—"})`, "success");
+    showMessage(`Событие создано (id: ${result?.id || "-"})`, "success");
     closeCreateModal();
     loadData();
   } catch (err) {
-    showMessage(err.message || "Ошибка при создании события", "error");
+    const localEvent = { ...payload, id: `local-${Date.now()}` };
+    addLocalEvent(localEvent);
+    appendLocalEventToState(localEvent);
+    renderCalendar();
+    closeCreateModal();
+    showMessage("Сервер не отвечает. Событие сохранено локально", "warning");
   }
 }
 
@@ -488,13 +496,13 @@ function bindDaySelection() {
     }
   });
 
-  calendar.addEventListener("click", (e) => {
-    if (e.button !== 0) return;
+  calendar.addEventListener("contextmenu", (e) => {
     const info = getDayInfo(e.target);
     if (!info) return;
     const range = getPersistedRange();
     if (!range) return;
     if (isDateWithinRange(info.date, range)) {
+      e.preventDefault();
       openCreateModal(range);
     }
   });
@@ -610,6 +618,64 @@ function closeCreateModal() {
   if (!els.createModal) return;
   els.createModal.classList.remove("open");
   els.createModal.setAttribute("aria-hidden", "true");
+}
+
+function loadLocalEvents() {
+  if (typeof localStorage === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("local_events") || "[]";
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn("Cannot load local events", e);
+    return [];
+  }
+}
+
+function saveLocalEvents(list) {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem("local_events", JSON.stringify(list || []));
+  } catch (e) {
+    console.warn("Cannot save local events", e);
+  }
+}
+
+function addLocalEvent(event) {
+  const list = loadLocalEvents();
+  list.push(event);
+  saveLocalEvents(list);
+}
+
+function mergeLocalEventsIntoCalendar(calendar, localEvents) {
+  if (!localEvents?.length) return calendar;
+  const result = calendar.map((item) => ({
+    employee: item.employee,
+    events: [...(item.events || [])],
+  }));
+
+  const byId = new Map(result.map((item) => [item.employee.id, item]));
+  localEvents.forEach((evt) => {
+    const emp = state.employees?.find((e) => e.id === evt.employee_id);
+    if (!emp) return;
+    const holder = byId.get(emp.id) || { employee: emp, events: [] };
+    holder.events.push({
+      type: evt.type,
+      start: evt.start,
+      end: evt.end,
+      local: true,
+      id: evt.id,
+    });
+    if (!byId.has(emp.id)) {
+      byId.set(emp.id, holder);
+      result.push(holder);
+    }
+  });
+  return result;
+}
+
+function appendLocalEventToState(evt) {
+  state.calendar = mergeLocalEventsIntoCalendar(state.calendar || [], [evt]);
 }
 
 function bindTooltipEvents() {
