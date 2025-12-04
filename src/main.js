@@ -39,6 +39,10 @@ const els = {
   applyFilter: document.getElementById("apply-filter"),
   resetFilter: document.getElementById("reset-filter"),
   tooltip: document.getElementById("tooltip"),
+  createModal: document.getElementById("create-modal"),
+  createModalClose: document.getElementById("create-modal-close"),
+  createModalOverlay: document.getElementById("create-modal-overlay"),
+  createRangeLabel: document.getElementById("create-range-label"),
 };
 
 const dragSelection = {
@@ -46,6 +50,7 @@ const dragSelection = {
   start: null,
   end: null,
   dragging: false,
+  moved: false,
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -60,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function bindEvents() {
   bindTooltipEvents();
+  bindModalEvents();
   bindDaySelection();
 
   els.refresh?.addEventListener("click", async (e) => {
@@ -127,12 +133,14 @@ function bindEvents() {
     state.selectedDepartment = parseSelectNumber(els.departmentSelect.value);
     syncEmployeeSelection();
     populateEmployeeSelect();
+    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
   });
 
   els.employeeSelect?.addEventListener("change", () => {
     state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
+    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
   });
@@ -142,6 +150,7 @@ function bindEvents() {
     state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
     console.log("Applying filter:", state.selectedDepartment, state.selectedEmployee);
     syncEmployeeSelection();
+    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
     showMessage("Фильтры применены", "success");
@@ -152,6 +161,7 @@ function bindEvents() {
     state.selectedEmployee = null;
     populateDepartmentSelect();
     populateEmployeeSelect();
+    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
     showMessage("Фильтры сброшены", "info");
@@ -232,6 +242,7 @@ async function loadData() {
   syncSelections();
   populateDepartmentSelect();
   populateEmployeeSelect();
+  populateCreateEmployeeSelect();
 
   renderCalendar();
   renderWorkload();
@@ -272,6 +283,24 @@ function populateEmployeeSelect() {
   if (!stillValid) {
     state.selectedEmployee = null;
     els.employeeSelect.value = "";
+  }
+}
+
+function populateCreateEmployeeSelect() {
+  if (!els.employeeId) return;
+  const current = Number(els.employeeId.value) || state.selectedEmployee || null;
+  els.employeeId.innerHTML = `<option value="">Выберете сотрудника</option>`;
+  (state.employees || []).forEach((emp) => {
+    const opt = document.createElement("option");
+    opt.value = String(emp.id);
+    opt.textContent = emp.full_name;
+    if (emp.id === current) opt.selected = true;
+    els.employeeId.appendChild(opt);
+  });
+
+  const selectedIds = getSelectedEmployeeIds();
+  if (selectedIds.length === 1) {
+    els.employeeId.value = String(selectedIds[0]);
   }
 }
 
@@ -357,6 +386,7 @@ async function submitEvent() {
   try {
     const result = await createEvent(payload);
     showMessage(`Событие создано (id: ${result?.id || "—"})`, "success");
+    closeCreateModal();
     loadData();
   } catch (err) {
     showMessage(err.message || "Ошибка при создании события", "error");
@@ -435,6 +465,7 @@ function bindDaySelection() {
   calendar.dataset.selectionBound = "1";
 
   calendar.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
     const info = getDayInfo(e.target);
     if (!info) return;
     e.preventDefault();
@@ -442,22 +473,46 @@ function bindDaySelection() {
     dragSelection.start = info.date;
     dragSelection.end = info.date;
     dragSelection.dragging = true;
-    applySelectionHighlight();
+    dragSelection.moved = false;
   });
 
   calendar.addEventListener("mouseover", (e) => {
     if (!dragSelection.dragging) return;
     const info = getDayInfo(e.target);
     if (!info) return;
-    dragSelection.start = dragSelection.anchor;
-    dragSelection.end = info.date;
-    applySelectionHighlight();
+    if (dragSelection.end !== info.date) {
+      dragSelection.start = dragSelection.anchor;
+      dragSelection.end = info.date;
+      dragSelection.moved = true;
+      applySelectionHighlight();
+    }
+  });
+
+  calendar.addEventListener("click", (e) => {
+    if (e.button !== 0) return;
+    const info = getDayInfo(e.target);
+    if (!info) return;
+    const range = getPersistedRange();
+    if (!range) return;
+    if (isDateWithinRange(info.date, range)) {
+      openCreateModal(range);
+    }
   });
 
   document.addEventListener("mouseup", () => {
     if (!dragSelection.dragging) return;
+    const hadMovement = dragSelection.moved;
     dragSelection.dragging = false;
+    dragSelection.moved = false;
     if (!dragSelection.start || !dragSelection.end) return;
+
+    const existing = getPersistedRange();
+    if (!hadMovement && existing && isDateWithinRange(dragSelection.start, existing)) {
+      applySelectionHighlight();
+      fillFormWithRange(existing.start, existing.end);
+      return;
+    }
+
     const range = normalizeRange(dragSelection.start, dragSelection.end);
     state.selectedRange = { start: toISO(range.start), end: toISO(range.end) };
     applySelectionHighlight();
@@ -473,21 +528,35 @@ function getDayInfo(target) {
   return { el, date };
 }
 
-function normalizeRange(startStr, endStr) {
-  const startDate = new Date(`${startStr}T00:00:00`);
-  const endDate = new Date(`${endStr}T00:00:00`);
+function toDateOnly(value) {
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+  return new Date(`${value}T00:00:00`);
+}
+
+function normalizeRange(startValue, endValue) {
+  const startDate = toDateOnly(startValue);
+  const endDate = toDateOnly(endValue);
   if (startDate <= endDate) return { start: startDate, end: endDate };
   return { start: endDate, end: startDate };
+}
+
+function isDateWithinRange(dateString, range) {
+  const current = toDateOnly(dateString);
+  return current >= range.start && current <= range.end;
+}
+
+function getPersistedRange() {
+  if (!state.selectedRange?.start || !state.selectedRange?.end) return null;
+  return normalizeRange(state.selectedRange.start, state.selectedRange.end);
 }
 
 function getActiveRange() {
   if (dragSelection.dragging && dragSelection.start && dragSelection.end) {
     return normalizeRange(dragSelection.start, dragSelection.end);
   }
-  if (state.selectedRange?.start && state.selectedRange?.end) {
-    return normalizeRange(state.selectedRange.start, state.selectedRange.end);
-  }
-  return null;
+  return getPersistedRange();
 }
 
 function applySelectionHighlight() {
@@ -504,15 +573,43 @@ function applySelectionHighlight() {
       day.classList.remove("selected");
       return;
     }
-    const current = new Date(`${dateStr}T00:00:00`);
+    const current = toDateOnly(dateStr);
     const inRange = current >= range.start && current <= range.end;
     day.classList.toggle("selected", inRange);
   });
 }
 
 function fillFormWithRange(startDate, endDate) {
+  if (!startDate || !endDate) return;
   if (els.eventStart) els.eventStart.value = toISO(startDate);
   if (els.eventEnd) els.eventEnd.value = toISO(endDate);
+  if (els.createRangeLabel) {
+    els.createRangeLabel.textContent = `${toISO(startDate)} — ${toISO(endDate)}`;
+  }
+}
+
+function bindModalEvents() {
+  els.createModalClose?.addEventListener("click", closeCreateModal);
+  els.createModalOverlay?.addEventListener("click", closeCreateModal);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCreateModal();
+  });
+}
+
+function openCreateModal(range) {
+  if (!els.createModal) return;
+  const start = range?.start || range?.end || new Date();
+  const end = range?.end || range?.start || start;
+  populateCreateEmployeeSelect();
+  fillFormWithRange(start, end);
+  els.createModal.classList.add("open");
+  els.createModal.setAttribute("aria-hidden", "false");
+}
+
+function closeCreateModal() {
+  if (!els.createModal) return;
+  els.createModal.classList.remove("open");
+  els.createModal.setAttribute("aria-hidden", "true");
 }
 
 function bindTooltipEvents() {

@@ -338,6 +338,7 @@ input:focus, select:focus {
 
 .small {
   font-size: 13px;
+  padding-top: 0.3rem;
 }
 
 .year-grid {
@@ -500,6 +501,42 @@ tr:last-child td {
 .tooltip_visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.modal__panel {
+  position: relative;
+  width: min(360px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 18px;
+}
+
+#create-modal-close {
+  min-width: 40px;
+  height: 36px;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 12px;
 }
 
 

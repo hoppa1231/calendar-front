@@ -171,6 +171,38 @@
       </section>
     </main>
   </div>
+  <div id="create-modal" class="modal" aria-hidden="true">
+    <div class="modal__overlay" id="create-modal-overlay"></div>
+    <div class="modal__panel card">
+      <div class="card-header">
+        <div>
+          <p class="eyebrow">Новое событие</p>
+          <h3>Отпуск или командировка</h3>
+          <div class="muted small" id="create-range-label"></div>
+        </div>
+        <button type="button" class="chip" id="create-modal-close">×</button>
+      </div>
+      <form id="create-event-form" class="form-grid fl-col">
+        <div class="flex gap-04rem"> 
+          <label>
+            <span>Сотрудник</span>
+            <select id="employee-id" required></select>
+          </label>
+          <label>
+            <span>Тип события</span>
+            <select id="event-type" required>
+              <option value="vacation">Отпуск</option>
+              <option value="business_trip">Командировка</option>
+            </select>
+          </label>
+        </div>
+        
+          <input type="date" id="event-start" style="display: none;" required />
+          <input type="date" id="event-end" style="display: none;" required />
+        <button type="submit" class="btn primary full">Создать</button>
+      </form>
+    </div>
+  </div>
   <div id="tooltip" class="tooltip fl-col" aria-hidden="true"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
