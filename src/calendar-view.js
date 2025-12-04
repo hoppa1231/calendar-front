@@ -86,6 +86,7 @@ function buildDayStats(data) {
 }
 
 function renderYearGrid(dayStats, startDate) {
+  console.log(dayStats, startDate);
   const container = document.getElementById("year-calendar");
   if (!container) return;
   container.innerHTML = "";
@@ -126,6 +127,7 @@ function renderYearGrid(dayStats, startDate) {
       const stat = dayStats.get(dateStr);
       const dayEl = document.createElement("div");
       dayEl.className = "day";
+      dayEl.dataset.date = dateStr;
 
       const numberEl = document.createElement("div");
       numberEl.className = "day-number";

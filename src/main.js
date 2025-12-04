@@ -4,7 +4,7 @@ import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO, parseJSON } from "./utils.js";
 import { buildMockCalendar, buildMockWorkload, buildMockDepartments, buildMockEmployees } from "./mock-data.js";
 
-const state = { calendar: [], workload: null };
+const state = { calendar: [], workload: null, selectedRange: null };
 const THEME_KEY = "calendar_theme";
 
 const els = {
@@ -41,6 +41,13 @@ const els = {
   tooltip: document.getElementById("tooltip"),
 };
 
+const dragSelection = {
+  anchor: null,
+  start: null,
+  end: null,
+  dragging: false,
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   setDefault();
   applyTheme(loadTheme());
@@ -53,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function bindEvents() {
   bindTooltipEvents();
+  bindDaySelection();
 
   els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -312,6 +320,7 @@ function renderCalendar() {
       rangeSummary: els.rangeSummary,
     }
   );
+  applySelectionHighlight();
 }
 
 function renderWorkload() {
@@ -418,6 +427,92 @@ function filterWorkload(workload, employeeIds) {
   });
 
   return { employees: filteredEmployees, total };
+}
+
+function bindDaySelection() {
+  const calendar = document.getElementById("year-calendar");
+  if (!calendar || calendar.dataset.selectionBound) return;
+  calendar.dataset.selectionBound = "1";
+
+  calendar.addEventListener("mousedown", (e) => {
+    const info = getDayInfo(e.target);
+    if (!info) return;
+    e.preventDefault();
+    dragSelection.anchor = info.date;
+    dragSelection.start = info.date;
+    dragSelection.end = info.date;
+    dragSelection.dragging = true;
+    applySelectionHighlight();
+  });
+
+  calendar.addEventListener("mouseover", (e) => {
+    if (!dragSelection.dragging) return;
+    const info = getDayInfo(e.target);
+    if (!info) return;
+    dragSelection.start = dragSelection.anchor;
+    dragSelection.end = info.date;
+    applySelectionHighlight();
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!dragSelection.dragging) return;
+    dragSelection.dragging = false;
+    if (!dragSelection.start || !dragSelection.end) return;
+    const range = normalizeRange(dragSelection.start, dragSelection.end);
+    state.selectedRange = { start: toISO(range.start), end: toISO(range.end) };
+    applySelectionHighlight();
+    fillFormWithRange(range.start, range.end);
+  });
+}
+
+function getDayInfo(target) {
+  const el = target.closest(".day");
+  if (!el || el.classList.contains("placeholder")) return null;
+  const { date } = el.dataset;
+  if (!date) return null;
+  return { el, date };
+}
+
+function normalizeRange(startStr, endStr) {
+  const startDate = new Date(`${startStr}T00:00:00`);
+  const endDate = new Date(`${endStr}T00:00:00`);
+  if (startDate <= endDate) return { start: startDate, end: endDate };
+  return { start: endDate, end: startDate };
+}
+
+function getActiveRange() {
+  if (dragSelection.dragging && dragSelection.start && dragSelection.end) {
+    return normalizeRange(dragSelection.start, dragSelection.end);
+  }
+  if (state.selectedRange?.start && state.selectedRange?.end) {
+    return normalizeRange(state.selectedRange.start, state.selectedRange.end);
+  }
+  return null;
+}
+
+function applySelectionHighlight() {
+  const calendar = document.getElementById("year-calendar");
+  if (!calendar) return;
+  const range = getActiveRange();
+  calendar.querySelectorAll(".day").forEach((day) => {
+    const dateStr = day.dataset.date;
+    if (!dateStr) {
+      day.classList.remove("selected");
+      return;
+    }
+    if (!range) {
+      day.classList.remove("selected");
+      return;
+    }
+    const current = new Date(`${dateStr}T00:00:00`);
+    const inRange = current >= range.start && current <= range.end;
+    day.classList.toggle("selected", inRange);
+  });
+}
+
+function fillFormWithRange(startDate, endDate) {
+  if (els.eventStart) els.eventStart.value = toISO(startDate);
+  if (els.eventEnd) els.eventEnd.value = toISO(endDate);
 }
 
 function bindTooltipEvents() {
