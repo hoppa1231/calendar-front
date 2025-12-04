@@ -482,6 +482,12 @@ tr:last-child td {
   z-index: 9999;
   max-width: 240px;
   box-sizing: border-box;
+  font-size: 0.9rem;
+  gap: 0.5rem;
+}
+
+.tooltip-item {
+  padding-left: 0.5rem;
 }
 
 .tooltip_visible {

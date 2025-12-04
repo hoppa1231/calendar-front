@@ -1,7 +1,7 @@
 import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent } from "./api.js";
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
-import { addDays, toISO } from "./utils.js";
+import { addDays, toISO, parseJSON } from "./utils.js";
 import { buildMockCalendar, buildMockWorkload, buildMockDepartments, buildMockEmployees } from "./mock-data.js";
 
 const state = { calendar: [], workload: null };
@@ -422,16 +422,22 @@ function filterWorkload(workload, employeeIds) {
 
 function bindTooltipEvents() {
   let delayTimeout = null;
+
   document.addEventListener("mouseover", (e) => {
     const t = e.target.closest(".day.active");
     if (!t) return;
 
     clearTimeout(delayTimeout);
     delayTimeout = setTimeout(() => {
-      tooltip.textContent = t.dataset.tooltip || "пустышка";
-      tooltip.classList.add("tooltip_visible");
-      tooltip.setAttribute('aria-hidden', 'false');
-    }, 500);
+      let parseData = parseJSON(e.target.dataset.tooltip);
+      if (!parseData) {
+        parseData = parseJSON(e.target.parentElement.dataset.tooltip);
+        if (!parseData) {
+          parseData = parseJSON(e.target.parentElement.parentElement.dataset.tooltip);
+        }
+      }
+      createTooltip(parseData || []);
+    }, 150);
 
     positionTooltip(e);
   });
@@ -472,3 +478,35 @@ function positionTooltip(e) {
   tooltip.style.left = x + 'px';
   tooltip.style.top = y + 'px';
 }
+
+function createTooltip(data) {
+    if (data.length != 0) {
+      tooltip.innerHTML = "";
+      data.forEach((item) => {
+        // Преобразуем дату в формат "1 янв"
+        const startDate = new Date(item.start);
+        const endDate = new Date(item.end);
+
+        // Форматирование даты
+        const options = { day: 'numeric', month: 'short' };
+        const startFormatted = startDate.toLocaleDateString('ru-RU', options);
+        const endFormatted = endDate.toLocaleDateString('ru-RU', options);
+
+        const tooltipItem = document.createElement('div');
+        tooltipItem.classList.add('tooltip-item', 'fl-col');
+        tooltipItem.innerHTML = `
+            <span class="tooltip-item__full_name">${item.full_name}</span>
+            <span class="tooltip-item__period">${startFormatted} — ${endFormatted}</span>
+        `;
+        let color;
+        if (item.type === "vacation") { color = "--accent"; }
+        else if (item.type === "business_trip") { color = "--accent-2"; }
+        tooltipItem.style.borderLeft = `var(${color}) 2px solid`;
+        tooltip.appendChild(tooltipItem);
+      });
+      tooltip.classList.add("tooltip_visible");
+      tooltip.setAttribute('aria-hidden', 'false');
+    } else {
+      tooltip.classList.remove("tooltip_visible");
+    }
+  }

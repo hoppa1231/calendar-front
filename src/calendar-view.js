@@ -26,10 +26,8 @@ export function renderCalendarViews(data, filters, els) {
       events: item.events.filter((e) => selectedTypes.includes(e.type) && employeesFilter.length === 0 ? true : employeesFilter.includes(item.employee.id)),
     }))
     .filter((item) => item.events.length > 0);
-
   const dayStats = buildDayStats(filtered);
   const employees = new Set(filtered.map((item) => item.employee.id));
-  // TODO: show more detailed tooltip info
 
   if (els.heroEmployees) els.heroEmployees.textContent = String(employees.size);
   if (els.eventCount) els.eventCount.textContent = `${dayStats.size} отмеченных дней`;
@@ -57,15 +55,28 @@ function buildDayStats(data) {
 
   data.forEach((item) => {
     item.events.forEach((event) => {
+      const full_name = item.employee.full_name;
       const start = new Date(event.start);
       const end = new Date(event.end);
+
+      const tooltipData = {
+        full_name,
+        type: event.type,
+        start: event.start,
+        end: event.end
+       };
       const cursor = new Date(start);
       while (cursor <= end) {
         const key = toISO(cursor);
         if (!stats.has(key)) {
-          stats.set(key, { vacation: new Set(), business_trip: new Set() });
+          stats.set(key, {
+            vacation: new Set(),
+            business_trip: new Set(),
+            tooltipData: []
+          });
         }
         stats.get(key)[event.type].add(item.employee.id);
+        stats.get(key).tooltipData.push(tooltipData);
         cursor.setDate(cursor.getDate() + 1);
       }
     });
@@ -143,6 +154,7 @@ function renderYearGrid(dayStats, startDate) {
 
         dayEl.appendChild(badgeWrap);
         dayEl.classList.add("active");
+        dayEl.dataset.tooltip = JSON.stringify(stat.tooltipData);
 
         const intensity = Math.min(0.7, 0.2 + total * 0.1);
         const vacColor = `rgba(55, 208, 178, ${intensity})`;
@@ -168,4 +180,13 @@ function renderYearGrid(dayStats, startDate) {
 function weekdayIndex(day) {
   // Convert Sunday=0 to Monday=0
   return day === 0 ? 6 : day - 1;
+}
+
+function buildTooltipContent(full_name, events) {
+  let content = `<strong>${full_name}</strong><br/>`;
+  events.forEach((event) => {
+    content += `${event.type === "vacation" ? "Отпуск" : "Командировка"}: ${formatDate(new Date(event.start))} — ${formatDate(new Date(event.end))}<br/>`;
+  });
+
+  return content;
 }

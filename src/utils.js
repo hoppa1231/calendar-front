@@ -37,6 +37,27 @@ export function bucket(dateString, mode) {
   return toISO(date);
 }
 
+export function parseJSON(jsonString) {
+  if (typeof jsonString !== 'string' || !jsonString.trim()) {
+    console.warn('Переданная строка пустая или не является строкой.');
+    return null; // Если строка пустая или не является строкой, сразу возвращаем null
+  }
+
+  try {
+    const parsedData = JSON.parse(jsonString);
+    // Дополнительная проверка на валидность объекта (если нужно)
+    if (typeof parsedData === 'object' && parsedData !== null) {
+      return parsedData;
+    } else {
+      console.warn('Распарсенная строка не является объектом.');
+      return null;
+    }
+  } catch (error) {
+    console.error('Ошибка при парсинге JSON:', error);
+    return null; // Возвращаем null в случае ошибки
+  }
+}
+
 export function palette(index) {
   const colors = [
     { bg: "rgba(55, 208, 178, 0.35)", border: "rgba(55, 208, 178, 0.9)" },
