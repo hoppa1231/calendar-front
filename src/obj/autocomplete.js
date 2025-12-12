@@ -64,10 +64,10 @@ export default class AutocompleteInput {
                 this.clearOptions();
                 return;
             }
-
-            if (this.apiUrl === 'local_employees') {
+            
+            if (this.apiUrl.includes('local_employees')) {
                 this.updateOptions(this.getEmployees(query)); // Локальный поиск
-            } else if (this.apiUrl === 'local_departments') {
+            } else if (this.apiUrl.includes('local_departments')) {
                 this.updateOptions(this.getDepartment(query)); // Локальный поиск
             } else {
                 this.fetchOptions(query)
@@ -116,9 +116,9 @@ export default class AutocompleteInput {
             opt.addEventListener('click', () => {
                 this.input.value = option[this.primaryParam];
                 this.input.dataset.selectedId = option.id;
-                if (this.apiUrl === 'local_employees') {
+                if (this.apiUrl.includes('local_employees_filter')) {
                     this.extraParams.selectedEmployee = option.id; // Обновляем выбранного сотрудника, если нужно
-                } else if (this.apiUrl === 'local_departments') {
+                } else if (this.apiUrl.includes('local_departments_filter')) {
                     this.extraParams.selectedDepartment = option.id; // Обновляем выбранный отдел, если нужно
                 }
                 this.clearOptions();
@@ -130,6 +130,11 @@ export default class AutocompleteInput {
     }
 
     clearOptions() {
+        // if (this.apiUrl.includes('local_employees_filter')) {
+        //     this.extraParams.selectedEmployee = 0;
+        // } else if (this.apiUrl.includes('local_departments_filter')) {
+        //     this.extraParams.selectedDepartment = 0;
+        // }
         this.datalist.innerHTML = '';
         this.datalist.style.display = 'none';
     }

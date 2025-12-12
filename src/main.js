@@ -98,11 +98,14 @@ function bindEvents() {
     if (!container.dataset.id) {
       console.warn("Autocomplete container missing data-id");
       return;
-    } else if (container.dataset.id === "employee-id") {
+    } else if (container.dataset.id === "employee-input") {
       apiUrl = 'local_employees';
       primaryParam = 'full_name';
-    } else if (container.dataset.id === "department-id") {
-      apiUrl = 'local_departments';
+    } else if (container.dataset.id === "employee-filter") {
+      apiUrl = 'local_employees_filter';
+      primaryParam = 'full_name';
+    } else if (container.dataset.id === "department-filter") {
+      apiUrl = 'local_departments_filter';
       minLength = 0;
     }
     new AutocompleteInput({
@@ -321,7 +324,7 @@ function getSelectedTypes() {
 
 async function submitEvent(e) {
   const payload = {
-    employee_id: Number(e.target.querySelector('input[name="employee-id"]')?.dataset.selectedId),
+    employee_id: Number(e.target.querySelector('input[name="employee-input"]')?.dataset.selectedId),
     type: els.eventType?.value,
     start: els.eventStart?.value,
     end: els.eventEnd?.value,
