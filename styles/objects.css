@@ -46,6 +46,29 @@ h4 {
     margin: 0;
 }
 
+.autocomplete-options {
+    position: absolute;
+    width: 88.5%;
+    background: var(--surface-2);
+    padding: 0.2rem 0.2rem;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    margin-right: 0.3rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    max-height: 10rem;
+    overflow-y: auto;
+    transition: top 0.3s ease, bottom 0.3s ease;
+}
+.autocomplete-option {
+    padding: 0.2rem 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.autocomplete-option:hover {
+    background-color: var(--surface-hover);
+}
+
 .select-zero {
     padding: 0.2rem 0.4rem;
     border-radius: 12px;

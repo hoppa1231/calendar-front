@@ -2,6 +2,7 @@ import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createE
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO, parseJSON } from "./utils.js";
+import AutocompleteInput from "./obj/autocomplete.js"
 import { buildMockCalendar, buildMockWorkload, buildMockDepartments, buildMockEmployees } from "./mock-data.js";
 
 const state = { calendar: [], workload: null, selectedRange: null };
@@ -25,7 +26,6 @@ const els = {
   workloadTable: document.getElementById("workload-table"),
   message: document.getElementById("global-message"),
   createForm: document.getElementById("create-event-form"),
-  employeeId: document.getElementById("employee-id"),
   eventType: document.getElementById("event-type"),
   eventStart: document.getElementById("event-start"),
   eventEnd: document.getElementById("event-end"),
@@ -34,8 +34,7 @@ const els = {
   btnToWorkload: document.getElementById("to-workload"),
   themeToggle: document.getElementById("theme-toggle"),
   slideSection: document.getElementById("slide-section"),
-  departmentSelect: document.getElementById("department-filter"),
-  employeeSelect: document.getElementById("employee-filter"),
+  autocompleteContainers: [...document.querySelectorAll(".autocomplete-container")],
   applyFilter: document.getElementById("apply-filter"),
   resetFilter: document.getElementById("reset-filter"),
   tooltip: document.getElementById("tooltip"),
@@ -67,6 +66,7 @@ function bindEvents() {
   bindTooltipEvents();
   bindModalEvents();
   bindDaySelection();
+  bindSlideSectionEvents();
 
   els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -91,29 +91,34 @@ function bindEvents() {
     });
   });
 
+  els.autocompleteContainers.forEach((container) => {
+    let apiUrl = '/';
+    let primaryParam = 'name';
+    let minLength = 1;
+    if (!container.dataset.id) {
+      console.warn("Autocomplete container missing data-id");
+      return;
+    } else if (container.dataset.id === "employee-id") {
+      apiUrl = 'local_employees';
+      primaryParam = 'full_name';
+    } else if (container.dataset.id === "department-id") {
+      apiUrl = 'local_departments';
+      minLength = 0;
+    }
+    new AutocompleteInput({
+      container: container,
+      apiUrl: apiUrl,
+      placeholder: container.dataset.placeholder,
+      minLength: minLength,
+      extraParams: state,
+      primaryParam: primaryParam,
+    });
+  });
+  console.log(state);
+
   els.createForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    await submitEvent();
-  });
-
-  els.btnToCalendar?.addEventListener("click", () => {
-    els.btnToCalendar.classList.add("ghost");
-    els.btnToCalendar.classList.remove("primary");
-
-    els.btnToWorkload.classList.add("primary");
-    els.btnToWorkload.classList.remove("ghost");
-
-    els.slideSection.style.transform = "translateX(0%)";
-  });
-
-  els.btnToWorkload?.addEventListener("click", () => {
-    els.btnToWorkload.classList.add("ghost");
-    els.btnToWorkload.classList.remove("primary");
-
-    els.btnToCalendar.classList.add("primary");
-    els.btnToCalendar.classList.remove("ghost");
-
-    els.slideSection.style.transform = "translateX(-52%)";
+    await submitEvent(e);
   });
 
   els.themeToggle?.addEventListener("click", () => {
@@ -129,39 +134,18 @@ function bindEvents() {
     }
   });
 
-  els.departmentSelect?.addEventListener("change", () => {
-    state.selectedDepartment = parseSelectNumber(els.departmentSelect.value);
-    syncEmployeeSelection();
-    populateEmployeeSelect();
-    populateCreateEmployeeSelect();
-    renderCalendar();
-    renderWorkload();
-  });
-
-  els.employeeSelect?.addEventListener("change", () => {
-    state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
-    populateCreateEmployeeSelect();
-    renderCalendar();
-    renderWorkload();
-  });
-
   els.applyFilter?.addEventListener("click", () => {
-    state.selectedDepartment = parseSelectNumber(els.departmentSelect.value);
-    state.selectedEmployee = parseSelectNumber(els.employeeSelect.value);
     console.log("Applying filter:", state.selectedDepartment, state.selectedEmployee);
     syncEmployeeSelection();
-    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
     showMessage("Фильтры применены", "success");
   });
 
+  els.resetFilter.style.cursor = "pointer";
   els.resetFilter?.addEventListener("click", () => {
     state.selectedDepartment = null;
     state.selectedEmployee = null;
-    populateDepartmentSelect();
-    populateEmployeeSelect();
-    populateCreateEmployeeSelect();
     renderCalendar();
     renderWorkload();
     showMessage("Фильтры сброшены", "info");
@@ -243,9 +227,6 @@ async function loadData() {
   }
 
   syncSelections();
-  populateDepartmentSelect();
-  populateEmployeeSelect();
-  populateCreateEmployeeSelect();
 
   renderCalendar();
   renderWorkload();
@@ -256,55 +237,26 @@ async function loadData() {
   );
 }
 
-function populateDepartmentSelect() {
-  if (!els.departmentSelect) return;
-  const current = state.selectedDepartment;
-  els.departmentSelect.innerHTML = `<option value="">Все отделы</option>`;
-  state.departments.forEach((dep) => {
-    const opt = document.createElement("option");
-    opt.value = String(dep.id);
-    opt.textContent = dep.name;
-    if (dep.id === current) opt.selected = true;
-    els.departmentSelect.appendChild(opt);
-  });
-}
+function bindSlideSectionEvents() {
+  els.btnToCalendar?.addEventListener("click", () => {
+    els.btnToCalendar.classList.add("ghost");
+    els.btnToCalendar.classList.remove("primary");
 
-function populateEmployeeSelect() {
-  if (!els.employeeSelect) return;
-  const allowed = getEmployeesByDepartment();
-  const current = state.selectedEmployee;
-  els.employeeSelect.innerHTML = `<option value="">Все сотрудники</option>`;
-  allowed.forEach((emp) => {
-    const opt = document.createElement("option");
-    opt.value = String(emp.id);
-    opt.textContent = emp.full_name;
-    if (emp.id === current) opt.selected = true;
-    els.employeeSelect.appendChild(opt);
-  });
-  // Если выбранный сотрудник не подходит под текущий отдел — сбросить
-  const stillValid = allowed.some((emp) => emp.id === current);
-  if (!stillValid) {
-    state.selectedEmployee = null;
-    els.employeeSelect.value = "";
-  }
-}
+    els.btnToWorkload.classList.add("primary");
+    els.btnToWorkload.classList.remove("ghost");
 
-function populateCreateEmployeeSelect() {
-  if (!els.employeeId) return;
-  const current = Number(els.employeeId.value) || state.selectedEmployee || null;
-  els.employeeId.innerHTML = `<option value="">Выберете сотрудника</option>`;
-  (state.employees || []).forEach((emp) => {
-    const opt = document.createElement("option");
-    opt.value = String(emp.id);
-    opt.textContent = emp.full_name;
-    if (emp.id === current) opt.selected = true;
-    els.employeeId.appendChild(opt);
+    els.slideSection.style.transform = "translateX(0%)";
   });
 
-  const selectedIds = getSelectedEmployeeIds();
-  if (selectedIds.length === 1) {
-    els.employeeId.value = String(selectedIds[0]);
-  }
+  els.btnToWorkload?.addEventListener("click", () => {
+    els.btnToWorkload.classList.add("ghost");
+    els.btnToWorkload.classList.remove("primary");
+
+    els.btnToCalendar.classList.add("primary");
+    els.btnToCalendar.classList.remove("ghost");
+
+    els.slideSection.style.transform = "translateX(-52%)";
+  });
 }
 
 function getEmployeesByDepartment() {
@@ -367,9 +319,9 @@ function getSelectedTypes() {
   return els.types.filter((c) => c.checked).map((c) => c.value);
 }
 
-async function submitEvent() {
+async function submitEvent(e) {
   const payload = {
-    employee_id: Number(els.employeeId?.value),
+    employee_id: Number(e.target.querySelector('input[name="employee-id"]')?.dataset.selectedId),
     type: els.eventType?.value,
     start: els.eventStart?.value,
     end: els.eventEnd?.value,
@@ -608,7 +560,6 @@ function openCreateModal(range) {
   if (!els.createModal) return;
   const start = range?.start || range?.end || new Date();
   const end = range?.end || range?.start || start;
-  populateCreateEmployeeSelect();
   fillFormWithRange(start, end);
   els.createModal.classList.add("open");
   els.createModal.setAttribute("aria-hidden", "false");

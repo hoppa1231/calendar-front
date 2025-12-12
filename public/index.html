@@ -9,16 +9,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Production -->
-  <link rel="stylesheet" href="./styles/styles.css">
+  <!-- <link rel="stylesheet" href="./styles/styles.css">
   <link rel="stylesheet" href="./styles/objects.css">
   <link rel="stylesheet" href="./styles/standart.css"> 
-  <link rel="stylesheet" href="./styles/animations.css">
+  <link rel="stylesheet" href="./styles/animations.css"> -->
 
   <!-- Live Server -->
-  <!-- <link rel="stylesheet" href="../styles/styles.css">
+  <link rel="stylesheet" href="../styles/styles.css">
   <link rel="stylesheet" href="../styles/objects.css">
   <link rel="stylesheet" href="../styles/standart.css">
-  <link rel="stylesheet" href="../styles/animations.css"> -->
+  <link rel="stylesheet" href="../styles/animations.css">
 </head>
 <body>
   <div class="page">
@@ -96,17 +96,11 @@
                       <form class="form-grid">
                       <label>
                         <span>Отдел</span>
-                        <select id="department-filter" class="select">
-                          <option value="">Все отделы</option>
-                        </select>
+                        <div class="autocomplete-container" data-id="department-id" data-placeholder="Отдел..."></div>
                       </label>
                       <label>
                         <span>Сотрудник</span>
-                        <select id="employee-filter" class="select">
-                          <option value="">Выберите сотрудника</option>
-                          <option value="1">ИВАНОВ</option>
-                          <option value="2">ПЕТРОВ</option>
-                        </select>
+                        <div class="autocomplete-container" data-id="employee-id" data-placeholder="Сотрудник..."></div>
                       </label>
                       <button type="button" class="btn primary" id="apply-filter">Применить</button>
                       <button type="button" class="btn ghost" id="reset-filter">Сбросить</button>
@@ -186,7 +180,7 @@
         <div class="flex gap-04rem"> 
           <label>
             <span>Сотрудник</span>
-            <select id="employee-id" required></select>
+            <div class="autocomplete-container" data-id="employee-id" data-placeholder="Сотрудник..."></div>
           </label>
           <label>
             <span>Тип события</span>
@@ -208,9 +202,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <!-- Production -->
-  <script type="module" src="./src/main.js"></script>
+  <!-- <script type="module" src="./src/main.js"></script> -->
 
   <!-- Live Server -->
-  <!-- <script type="module" src="../src/main.js"></script> -->
+  <script type="module" src="../src/main.js"></script>
 </body>
 </html>

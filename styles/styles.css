@@ -1,6 +1,7 @@
 :root {
   --bg: #f6f7fb;
   --surface: #ffffff;
+  --surface-hover: #e1e4e8;
   --surface-2: #f1f4fa;
   --accent: #1ea583;
   --accent-2: #f4b23d;
@@ -13,6 +14,7 @@
 body.theme-dark {
   --bg: #0e1b2b;
   --surface: #102640;
+  --surface-hover: #21364f;
   --surface-2: #0b1c32;
   --accent: #37d0b2;
   --accent-2: #f4b23d;
@@ -525,9 +527,9 @@ tr:last-child td {
 
 .modal__panel {
   position: relative;
+  overflow: visible;
   width: min(360px, 92vw);
   max-height: 90vh;
-  overflow-y: auto;
   border-radius: 18px;
 }
 
