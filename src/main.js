@@ -566,7 +566,7 @@ function showApprovalModal(pending) {
         }
       });
       cleanup();
-      resolve(ids);
+      resolve(null);
     });
 
     actions.appendChild(cancelBtn);
