@@ -129,6 +129,13 @@ export default class AutocompleteInput {
         this.datalist.style.display = 'block';
     }
 
+    clearInput() {
+        if (this.input) {
+            this.input.value = '';
+            this.input.dataset.selectedId = '';
+        }
+    }
+
     clearOptions() {
         // if (this.apiUrl.includes('local_employees_filter')) {
         //     this.extraParams.selectedEmployee = 0;

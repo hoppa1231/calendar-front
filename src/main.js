@@ -52,6 +52,11 @@ const dragSelection = {
   moved: false,
 };
 
+const callback = {
+  resetFilterEmployee: () => {},
+  resetFilterDepartment: () => {},
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   setDefault();
   applyTheme(loadTheme());
@@ -95,20 +100,21 @@ function bindEvents() {
     let apiUrl = '/';
     let primaryParam = 'name';
     let minLength = 1;
-    if (!container.dataset.id) {
-      console.warn("Autocomplete container missing data-id");
-      return;
-    } else if (container.dataset.id === "employee-input") {
-      apiUrl = 'local_employees';
-      primaryParam = 'full_name';
-    } else if (container.dataset.id === "employee-filter") {
-      apiUrl = 'local_employees_filter';
-      primaryParam = 'full_name';
-    } else if (container.dataset.id === "department-filter") {
-      apiUrl = 'local_departments_filter';
-      minLength = 0;
+
+    switch (container.dataset.id) {
+      case "":
+        console.warn("Autocomplete container missing data-id");
+        return;
+      case "employee-input":
+        apiUrl = 'local_employees'; primaryParam = 'full_name';
+      case "employee-filter":
+        apiUrl = 'local_employees_filter'; primaryParam = 'full_name';
+      case "department-filter":
+        apiUrl = 'local_departments_filter'; minLength = 0;
+      default:
+        console.warn(`Unknown autocomplete container ID: ${container.dataset.id}`);
     }
-    new AutocompleteInput({
+    const input = new AutocompleteInput({
       container: container,
       apiUrl: apiUrl,
       placeholder: container.dataset.placeholder,
@@ -116,6 +122,13 @@ function bindEvents() {
       extraParams: state,
       primaryParam: primaryParam,
     });
+
+    switch (container.dataset.id) {
+      case "employee-input":
+        callback.resetFilterEmployee = input.clearInput();
+      case "department-filter":
+        callback.resetFilterDepartment = input.clearInput();
+    }
   });
   console.log(state);
 
