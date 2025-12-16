@@ -31,10 +31,12 @@ export function buildMockCalendar(start, end, employees = MOCK_EMPLOYEES) {
 
   return employees.map((emp, idx) => {
     const events = [];
+    const baseId = emp.id * 100;
     const vacStart = addDays(startDate, (idx * 5) % daysCount);
     const vacEnd = addDays(vacStart, 4);
     if (vacStart <= endDate) {
       events.push({
+        id: baseId + 1,
         type: "vacation",
         start: toISO(vacStart),
         end: toISO(vacEnd <= endDate ? vacEnd : endDate),
@@ -46,6 +48,7 @@ export function buildMockCalendar(start, end, employees = MOCK_EMPLOYEES) {
     const tripEnd = addDays(tripStart, 2);
     if (tripStart <= endDate) {
       events.push({
+        id: baseId + 2,
         type: "business_trip",
         start: toISO(tripStart),
         end: toISO(tripEnd <= endDate ? tripEnd : endDate),

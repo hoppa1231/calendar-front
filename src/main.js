@@ -570,14 +570,13 @@ function showApprovalModal(pending) {
         try {
           await deleteEvent(id);
           removeEventFromState(id);
+          renderCalendar();
+          renderWorkload();
         } catch (err) {
           console.error("Failed to delete event id:", id, err);
         }
       });
       cleanup();
-      syncEmployeeSelection();
-      renderCalendar();
-      renderWorkload();
       resolve(null);
     });
 
@@ -903,7 +902,6 @@ function createTooltip(data) {
             <span class="tooltip-item__period">${startFormatted} — ${endFormatted}</span>
         `;
         if (item.level === 'saved') {
-          console.log("Adding red circle for saved level");
           const redCircle = document.createElement('div');
           redCircle.classList.add('tooltip-item__red-circle');
           tooltipItem.insertAdjacentElement('afterbegin', redCircle);
