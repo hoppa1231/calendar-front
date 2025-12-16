@@ -1,4 +1,4 @@
-import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent, patchData, updateEventLevel } from "./api.js";
+import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent, patchData, updateEventLevel, deleteEvent } from "./api.js";
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO, parseJSON } from "./utils.js";
@@ -549,6 +549,27 @@ function showApprovalModal(pending) {
       cleanup();
       resolve(ids);
     });
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn ghost";
+    cancelBtn.style.cursor = "pointer";
+    cancelBtn.textContent = "Удалить";
+    cancelBtn.addEventListener("click", () => {
+      const ids = Array.from(list.querySelectorAll("input[type='checkbox']:checked")).map((c) =>
+        Number(c.value)
+      );
+      ids.forEach(async (id) => {
+        try {
+          await deleteEvent(id);
+        } catch (err) {
+          console.error("Failed to delete event id:", id, err);
+        }
+      });
+      cleanup();
+      resolve(ids);
+    });
+
+    actions.appendChild(cancelBtn);
     actions.appendChild(approveBtn);
 
     modal.appendChild(header);

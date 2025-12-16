@@ -32,7 +32,7 @@ export function fetchEmployees() {
 
 export function patchData () {
   const url = `${API_BASE}/data`;
-  return request(url, {}, "Не удалось обновить данные");
+  return request(url, { method: "PATCH" }, "Не удалось обновить данные");
 }
 
 export function updateEventLevel(eventId, level) {
@@ -44,6 +44,16 @@ export function updateEventLevel(eventId, level) {
       body: JSON.stringify({ new_level: level }),
     },
     "Не удалось обновить событие"
+  );
+}
+
+export function deleteEvent(eventId) {
+  return request(
+    `${API_BASE}/events/${eventId}`,
+    {
+      method: "DELETE",
+    },
+    "Не удалось удалить событие"
   );
 }
 
