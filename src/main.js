@@ -1,4 +1,4 @@
-import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent } from "./api.js";
+import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent, patchData } from "./api.js";
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO, parseJSON } from "./utils.js";
@@ -182,8 +182,6 @@ function bindEvents() {
     renderWorkload();
     showMessage("Фильтры сброшены", "info");
   });
-
-  console.log("State", state)
 }
 
 function parseSelectNumber(value) {
@@ -238,6 +236,7 @@ async function loadData() {
   showMessage("Обновляем данные…", "info");
   let usedMock = false;
   try {
+    patchData();
     const [departments, employees, calendar, workload] = await Promise.all([
       fetchDepartments(),
       fetchEmployees(),

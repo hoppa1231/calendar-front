@@ -30,6 +30,11 @@ export function fetchEmployees() {
   return request(url, {}, "Не удалось получить сотрудников");
 }
 
+export function patchData() {
+  const url = `${API_BASE}/data`;
+  return request(url, {}, "Не удалось синхронизировать данные");
+}
+
 export function createEvent(payload) {
   return request(
     `${API_BASE}/events`,
