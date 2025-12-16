@@ -8,12 +8,12 @@ export const MOCK_DEPARTMENTS = [
 ];
 
 export const MOCK_EMPLOYEES = [
-  { id: 101, full_name: "Анна Петрова", department_id: 1 },
-  { id: 102, full_name: "Игорь Смирнов", department_id: 1 },
-  { id: 103, full_name: "Елена Орлова", department_id: 2 },
-  { id: 104, full_name: "Дмитрий Ковалёв", department_id: 3 },
-  { id: 105, full_name: "Мария Соколова", department_id: 4 },
-  { id: 106, full_name: "Сергей Иванов", department_id: 2 },
+  { id: 101, full_name: "Анна Петрова", department_ids: [1] },
+  { id: 102, full_name: "Игорь Смирнов", department_ids: [1, 3] },
+  { id: 103, full_name: "Елена Орлова", department_ids: [2] },
+  { id: 104, full_name: "Дмитрий Ковалёв", department_ids: [3] },
+  { id: 105, full_name: "Мария Соколова", department_ids: [4] },
+  { id: 106, full_name: "Сергей Иванов", department_ids: [2, 4] },
 ];
 
 export function buildMockDepartments() {

@@ -1,15 +1,10 @@
 {
-  "openapi": "3.0.0",
+  "openapi": "3.0.4",
   "info": {
-    "title": "OKR REINCARNATION",
+    "title": "Calendar API",
     "description": "Простое API для получения календаря отпусков/командировок и ежедневной загрузки сотрудников.",
     "version": "1.0.3"
   },
-  "servers": [
-    {
-      "url": "/api/v1"
-    }
-  ],
   "paths": {
     "/api/v1/calendar": {
       "get": {
@@ -164,10 +159,95 @@
         }
       }
     },
+    "/api/v1/events/{event_id}": {
+      "delete": {
+        "summary": "Delete Event",
+        "description": "Удалить событие календаря по ID\n\nArgs:\n    event_id: ID события для удаления",
+        "operationId": "delete_event_api_v1_events__event_id__delete",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Event Dates",
+        "description": "Обновить даты события календаря\n\nArgs:\n    event_id: ID события для обновления\n    update_data: Новые даты начала и окончания",
+        "operationId": "update_event_dates_api_v1_events__event_id__put",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCalendarEventDates"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/departments": {
       "get": {
         "summary": "Get Departments",
-        "description": "Получить список отделов",
         "operationId": "get_departments_api_v1_departments_get",
         "responses": {
           "200": {
@@ -175,11 +255,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "title": "Response Get Departments Api V1 Departments Get"
+                  "$ref": "#/components/schemas/DepartmentsResponse"
                 }
               }
             }
@@ -190,19 +266,17 @@
     "/api/v1/employees": {
       "get": {
         "summary": "Get Employees",
-        "description": "Получить список сотрудников",
         "operationId": "get_employees_api_v1_employees_get",
         "parameters": [
           {
-            "name": "department",
+            "name": "department_id",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "description": "Название отдела для фильтрации сотрудников",
-              "title": "Department"
+              "description": "ID отдела, для которого надо получить сотрудников",
+              "title": "Department Id"
             },
-            "description": "Название отдела для фильтрации сотрудников"
+            "description": "ID отдела, для которого надо получить сотрудников"
           }
         ],
         "responses": {
@@ -211,12 +285,35 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EmployeeInfo"
-                  },
-                  "title": "Response Get Employees Api V1 Employees Get"
+                  "$ref": "#/components/schemas/GetemployeeResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data": {
+      "patch": {
+        "summary": "Update Data",
+        "description": "Обновляет данные из битрикса",
+        "operationId": "update_data_api_v1_data_patch",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           }
@@ -228,6 +325,10 @@
     "schemas": {
       "CalendarEvent": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "type": {
             "type": "string",
             "enum": [
@@ -245,13 +346,19 @@
             "type": "string",
             "format": "date",
             "title": "End"
+          },
+          "level": {
+            "type": "string",
+            "title": "Level"
           }
         },
         "type": "object",
         "required": [
+          "id",
           "type",
           "start",
-          "end"
+          "end",
+          "level"
         ],
         "title": "CalendarEvent"
       },
@@ -298,6 +405,15 @@
             "type": "string",
             "format": "date",
             "title": "End"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "approved"
+            ],
+            "title": "Level",
+            "default": "saved"
           }
         },
         "type": "object",
@@ -341,7 +457,50 @@
         ],
         "title": "DailyWorkload"
       },
-      "EmployeeInfo": {
+      "DeleteEventResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "Событие успешно удалено"
+          },
+          "event_id": {
+            "type": "integer",
+            "title": "Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_id"
+        ],
+        "title": "DeleteEventResponse"
+      },
+      "DepartmentInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "DepartmentInfo"
+      },
+      "DepartmentsResponse": {
+        "items": {
+          "$ref": "#/components/schemas/DepartmentInfo"
+        },
+        "type": "array",
+        "title": "DepartmentsResponse"
+      },
+      "EmployeeDepInfo": {
         "properties": {
           "id": {
             "type": "integer",
@@ -351,9 +510,31 @@
             "type": "string",
             "title": "Full Name"
           },
-          "department": {
+          "department_id": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Department Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "department_id"
+        ],
+        "title": "EmployeeDepInfo"
+      },
+      "EmployeeInfo": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "full_name": {
             "type": "string",
-            "title": "Department"
+            "title": "Full Name"
           }
         },
         "type": "object",
@@ -362,6 +543,13 @@
           "full_name"
         ],
         "title": "EmployeeInfo"
+      },
+      "GetemployeeResponse": {
+        "items": {
+          "$ref": "#/components/schemas/EmployeeDepInfo"
+        },
+        "type": "array",
+        "title": "GetemployeeResponse"
       },
       "HTTPValidationError": {
         "properties": {
@@ -375,6 +563,51 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "UpdateCalendarEventDates": {
+        "properties": {
+          "new_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Start Date"
+          },
+          "new_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New End Date"
+          },
+          "new_level": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "saved",
+                  "approved"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Level"
+          }
+        },
+        "type": "object",
+        "title": "UpdateCalendarEventDates"
       },
       "ValidationError": {
         "properties": {

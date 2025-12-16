@@ -5,7 +5,15 @@ import { addDays, toISO, parseJSON } from "./utils.js";
 import AutocompleteInput from "./obj/autocomplete.js"
 import { buildMockCalendar, buildMockWorkload, buildMockDepartments, buildMockEmployees } from "./mock-data.js";
 
-const state = { calendar: [], workload: null, selectedRange: null };
+const state = {
+  calendar: [],
+  workload: null,
+  departments: [],
+  employees: [],
+  selectedRange: null,
+  selectedDepartment: null,
+  selectedEmployee: null,
+};
 const THEME_KEY = "calendar_theme";
 
 const els = {
@@ -97,8 +105,8 @@ function bindEvents() {
   });
 
   els.autocompleteContainers.forEach((container) => {
-    let apiUrl = '/';
-    let primaryParam = 'name';
+    let apiUrl = "/";
+    let primaryParam = "name";
     let minLength = 1;
 
     switch (container.dataset.id) {
@@ -106,13 +114,20 @@ function bindEvents() {
         console.warn("Autocomplete container missing data-id");
         return;
       case "employee-input":
-        apiUrl = 'local_employees'; primaryParam = 'full_name';
+        apiUrl = "local_employees";
+        primaryParam = "full_name";
+        break;
       case "employee-filter":
-        apiUrl = 'local_employees_filter'; primaryParam = 'full_name';
+        apiUrl = "local_employees_filter";
+        primaryParam = "full_name";
+        break;
       case "department-filter":
-        apiUrl = 'local_departments_filter'; minLength = 0;
+        apiUrl = "local_departments_filter";
+        minLength = 0;
+        break;
       default:
         console.warn(`Unknown autocomplete container ID: ${container.dataset.id}`);
+        return;
     }
     const input = new AutocompleteInput({
       container: container,
@@ -125,12 +140,13 @@ function bindEvents() {
 
     switch (container.dataset.id) {
       case "employee-input":
-        callback.resetFilterEmployee = input.clearInput();
+        callback.resetFilterEmployee = () => input.clearInput();
+        break;
       case "department-filter":
-        callback.resetFilterDepartment = input.clearInput();
+        callback.resetFilterDepartment = () => input.clearInput();
+        break;
     }
   });
-  console.log(state);
 
   els.createForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -166,6 +182,8 @@ function bindEvents() {
     renderWorkload();
     showMessage("Фильтры сброшены", "info");
   });
+
+  console.log("State", state)
 }
 
 function parseSelectNumber(value) {
@@ -227,14 +245,14 @@ async function loadData() {
       fetchWorkload(start, end),
     ]);
     state.departments = departments || [];
-    state.employees = employees || [];
+    state.employees = normalizeEmployees(employees || []);
     state.calendar = mergeLocalEventsIntoCalendar(calendar || [], loadLocalEvents());
     state.workload = workload || null;
   } catch (err) {
     console.error(err);
     usedMock = true;
     state.departments = buildMockDepartments();
-    state.employees = buildMockEmployees();
+    state.employees = normalizeEmployees(buildMockEmployees());
     state.calendar = mergeLocalEventsIntoCalendar(
       buildMockCalendar(start, end, state.employees),
       loadLocalEvents()
@@ -277,15 +295,20 @@ function bindSlideSectionEvents() {
 
 function getEmployeesByDepartment() {
   if (!state.selectedDepartment) return state.employees;
-  return state.employees.filter((emp) => emp.department_id === state.selectedDepartment);
+  return state.employees.filter((emp) =>
+    employeeInDepartment(emp, state.selectedDepartment)
+  );
 }
 
 function getSelectedEmployeeIds() {
+  console.log("Getting selected employee IDs:", state.selectedEmployee, state.selectedDepartment);
   if (state.selectedEmployee) return [state.selectedEmployee];
   return getEmployeesByDepartment().map((emp) => emp.id);
 }
 
 function syncSelections() {
+  state.selectedDepartment = normalizeId(state.selectedDepartment);
+  state.selectedEmployee = normalizeId(state.selectedEmployee);
   // Отфильтровать отдел
   const depExists = state.selectedDepartment
     ? state.departments.some((d) => d.id === state.selectedDepartment)
@@ -299,10 +322,24 @@ function syncSelections() {
 }
 
 function syncEmployeeSelection() {
+  state.selectedDepartment = normalizeId(state.selectedDepartment);
+  state.selectedEmployee = normalizeId(state.selectedEmployee);
   const allowed = getEmployeesByDepartment();
+  console.log("Allowed employees after sync:", allowed);
   if (state.selectedEmployee && !allowed.some((e) => e.id === state.selectedEmployee)) {
     state.selectedEmployee = null;
+    console.log("Selected employee reset due to department filter");
   }
+}
+
+function employeeInDepartment(emp, departmentId) {
+  if (!departmentId) return true;
+  const deps = Array.isArray(emp.department_ids)
+    ? emp.department_ids
+    : emp.department_id
+    ? [emp.department_id]
+    : [];
+  return deps.includes(departmentId);
 }
 
 function renderCalendar() {
@@ -312,7 +349,7 @@ function renderCalendar() {
       selectedTypes: getSelectedTypes(),
       start: els.start?.value,
       end: els.end?.value,
-      employeeIds: getSelectedEmployeeIds(),
+      employeesIds: getSelectedEmployeeIds(),
     },
     {
       heroEmployees: els.heroEmployees,
@@ -413,7 +450,8 @@ function loadTheme() {
 function filterWorkload(workload, employeeIds) {
   if (!workload || !workload.employees) return workload;
   const allowed = new Set(employeeIds || []);
-  if (!allowed.size || allowed.size === workload.employees.length) return workload;
+  if (!allowed.size) return { employees: [], total: [] };
+  if (allowed.size === workload.employees.length) return workload;
 
   const filteredEmployees = workload.employees.filter((emp) =>
     allowed.has(emp.employee.id)
@@ -433,6 +471,23 @@ function filterWorkload(workload, employeeIds) {
   });
 
   return { employees: filteredEmployees, total };
+}
+
+function normalizeEmployees(list) {
+  return (list || []).map((emp) => {
+    const depsRaw = emp.department_ids || emp.department_id || [];
+    const department_ids = Array.isArray(depsRaw)
+      ? depsRaw.map((d) => Number(d)).filter(Number.isFinite)
+      : Number.isFinite(Number(depsRaw))
+      ? [Number(depsRaw)]
+    : [];
+    return { ...emp, department_ids };
+  });
+}
+
+function normalizeId(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
 }
 
 function bindDaySelection() {

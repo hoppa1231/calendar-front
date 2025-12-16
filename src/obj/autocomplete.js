@@ -79,11 +79,15 @@ export default class AutocompleteInput {
 
     getEmployees(query) {
         // Логика фильтрации сотрудников
-        if (!this.extraParams.selectedDepartment) {
-            return this.extraParams.employees.filter(emp => emp.full_name.toLowerCase().includes(query.toLowerCase()));
-        } else {
-            return this.extraParams.employees.filter(emp => emp.department_id === this.extraParams.selectedDepartment && emp.full_name.toLowerCase().includes(query.toLowerCase()));
-        }
+        console.log("Extra Params in AutocompleteInput:", this.extraParams);
+        const match = (emp) => emp.full_name.toLowerCase().includes(query.toLowerCase());
+        const inDept = (emp, dep) => {
+            if (!dep) return true;
+            if (Array.isArray(emp.department_ids)) return emp.department_ids.includes(dep);
+            return emp.department_id === dep;
+        };
+        console.log("Filtering employees with selectedDepartment:", this.extraParams.selectedDepartment);
+        return this.extraParams.employees.filter(emp => inDept(emp, this.extraParams.selectedDepartment) && match(emp));
     }
 
     getDepartment(query) {

@@ -19,7 +19,8 @@ const weekdayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export function renderCalendarViews(data, filters, els) {
   const selectedTypes = filters.selectedTypes || [];
-  const employeesFilter = filters.employeeIds || [];
+  const employeesFilter = filters.employeesIds || [];
+  console.log("Rendering calendar with filters:", employeesFilter, selectedTypes);
   const filtered = (data || [])
     .map((item) => ({
       ...item,
