@@ -24,7 +24,10 @@ export function renderCalendarViews(data, filters, els) {
   const filtered = (data || [])
     .map((item) => ({
       ...item,
-      events: item.events.filter((e) => selectedTypes.includes(e.type) && employeesFilter.length === 0 ? true : employeesFilter.includes(item.employee.id)),
+      events: item.events.filter((e) =>
+        selectedTypes.includes(e.type) &&
+        (employeesFilter.length === 0 ? true : employeesFilter.includes(item.employee.id))
+      ),
     }))
     .filter((item) => item.events.length > 0);
   const dayStats = buildDayStats(filtered);
@@ -62,12 +65,14 @@ function buildDayStats(data) {
       const level = event.level || "saved";
 
       const tooltipData = {
+        id: event.id,
+        employee_id: item.employee.id,
         full_name,
         type: event.type,
         start: event.start,
         end: event.end,
-        level: level
-       };
+        level: level,
+      };
       const cursor = new Date(start);
       while (cursor <= end) {
         const key = toISO(cursor);

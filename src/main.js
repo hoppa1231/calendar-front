@@ -1,4 +1,4 @@
-import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent, patchData } from "./api.js";
+import { fetchCalendar, fetchWorkload, fetchDepartments, fetchEmployees, createEvent, patchData, updateEventLevel } from "./api.js";
 import { renderCalendarViews } from "./calendar-view.js";
 import { renderWorkloadViews } from "./workload-view.js";
 import { addDays, toISO, parseJSON } from "./utils.js";
@@ -81,6 +81,7 @@ function bindEvents() {
   bindModalEvents();
   bindDaySelection();
   bindSlideSectionEvents();
+  bindApprovalClicks();
 
   els.refresh?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -166,9 +167,7 @@ function bindEvents() {
       els.rangeChange.style.display = visible ? "none" : "block";
     }
   });
-
   els.applyFilter?.addEventListener("click", () => {
-    console.log("Applying filter:", state.selectedDepartment, state.selectedEmployee);
     syncEmployeeSelection();
     renderCalendar();
     renderWorkload();
@@ -470,6 +469,99 @@ function filterWorkload(workload, employeeIds) {
   });
 
   return { employees: filteredEmployees, total };
+}
+
+function bindApprovalClicks() {
+  document.addEventListener("click", async (e) => {
+    const overline = e.target.closest(".day-overline");
+    if (!overline) return;
+
+    const dayEl = overline.closest(".day");
+    const raw = dayEl?.dataset.tooltip;
+    const tooltipData = parseJSON(raw) || [];
+    const pending = tooltipData.filter((item) => item.level === "saved");
+    if (!pending.length) return;
+
+    const selection = await showApprovalModal(pending);
+    if (!selection || selection.length === 0) return;
+
+    showMessage("Отправляем согласование...", "info");
+    try {
+      for (const id of selection) {
+        await updateEventLevel(id, "approved");
+      }
+      showMessage("События согласованы", "success");
+      await loadData();
+    } catch (err) {
+      showMessage(err.message || "Не удалось согласовать событие", "error");
+    }
+  });
+}
+
+function showApprovalModal(pending) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "approval-overlay";
+
+    const modal = document.createElement("div");
+    modal.className = "approval-modal";
+
+    const header = document.createElement("div");
+    header.className = "approval-header";
+    header.innerHTML = `<h3>Согласование событий</h3>`;
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "chip";
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", () => {
+      cleanup();
+      resolve(null);
+    });
+    header.appendChild(closeBtn);
+
+    const list = document.createElement("div");
+    list.className = "approval-list";
+
+    pending.forEach((item) => {
+      const row = document.createElement("label");
+      row.className = "approval-item";
+      const checkbox = document.createElement("input");
+      checkbox.className = "checkbox";
+      checkbox.type = "checkbox";
+      checkbox.checked = true;
+      checkbox.value = item.id;
+      const info = document.createElement("div");
+      info.innerHTML = `<strong>${item.full_name}</strong><br>${humanType(item.type)} ${item.start} — ${item.end}`;
+      row.appendChild(checkbox);
+      row.appendChild(info);
+      list.appendChild(row);
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "approval-actions";
+    const approveBtn = document.createElement("button");
+    approveBtn.className = "btn primary";
+    approveBtn.textContent = "Согласовать выбранные";
+    approveBtn.addEventListener("click", () => {
+      const ids = Array.from(list.querySelectorAll("input[type='checkbox']:checked")).map((c) =>
+        Number(c.value)
+      );
+      cleanup();
+      resolve(ids);
+    });
+    actions.appendChild(approveBtn);
+
+    modal.appendChild(header);
+    modal.appendChild(list);
+    modal.appendChild(actions);
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    function cleanup() {
+      overlay.remove();
+    }
+  });
 }
 
 function normalizeEmployees(list) {
@@ -792,7 +884,13 @@ function createTooltip(data) {
       });
       tooltip.classList.add("tooltip_visible");
       tooltip.setAttribute('aria-hidden', 'false');
-    } else {
-      tooltip.classList.remove("tooltip_visible");
-    }
+  } else {
+    tooltip.classList.remove("tooltip_visible");
   }
+}
+
+function humanType(type) {
+  if (type === "vacation") return "отпуск";
+  if (type === "business_trip") return "командировка";
+  return type || "событие";
+}

@@ -30,9 +30,21 @@ export function fetchEmployees() {
   return request(url, {}, "Не удалось получить сотрудников");
 }
 
-export function patchData() {
+export function patchData () {
   const url = `${API_BASE}/data`;
-  return request(url, {}, "Не удалось синхронизировать данные");
+  return request(url, {}, "Не удалось обновить данные");
+}
+
+export function updateEventLevel(eventId, level) {
+  return request(
+    `${API_BASE}/events/${eventId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ new_level: level }),
+    },
+    "Не удалось обновить событие"
+  );
 }
 
 export function createEvent(payload) {
