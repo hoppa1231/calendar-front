@@ -566,6 +566,9 @@ function showApprovalModal(pending) {
         }
       });
       cleanup();
+      syncEmployeeSelection();
+      renderCalendar();
+      renderWorkload();
       resolve(null);
     });
 
