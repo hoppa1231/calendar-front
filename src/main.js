@@ -498,6 +498,14 @@ function bindApprovalClicks() {
   });
 }
 
+function removeEventFromState(id) {
+  state.calendar = (state.calendar || []).map(item => ({
+    ...item,
+    events: (item.events || []).filter(e => e.id !== id),
+  })).filter(item => item.events.length > 0);
+}
+
+
 function showApprovalModal(pending) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
@@ -550,17 +558,18 @@ function showApprovalModal(pending) {
       resolve(ids);
     });
 
-    const cancelBtn = document.createElement("button");
-    cancelBtn.className = "btn ghost";
-    cancelBtn.style.cursor = "pointer";
-    cancelBtn.textContent = "Удалить";
-    cancelBtn.addEventListener("click", () => {
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn ghost";
+    deleteBtn.style.cursor = "pointer";
+    deleteBtn.textContent = "Удалить";
+    deleteBtn.addEventListener("click", () => {
       const ids = Array.from(list.querySelectorAll("input[type='checkbox']:checked")).map((c) =>
         Number(c.value)
       );
       ids.forEach(async (id) => {
         try {
           await deleteEvent(id);
+          removeEventFromState(id);
         } catch (err) {
           console.error("Failed to delete event id:", id, err);
         }
@@ -572,7 +581,7 @@ function showApprovalModal(pending) {
       resolve(null);
     });
 
-    actions.appendChild(cancelBtn);
+    actions.appendChild(deleteBtn);
     actions.appendChild(approveBtn);
 
     modal.appendChild(header);
