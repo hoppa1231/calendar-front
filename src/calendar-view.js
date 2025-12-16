@@ -59,12 +59,14 @@ function buildDayStats(data) {
       const full_name = item.employee.full_name;
       const start = new Date(event.start);
       const end = new Date(event.end);
+      const level = event.level || "saved";
 
       const tooltipData = {
         full_name,
         type: event.type,
         start: event.start,
-        end: event.end
+        end: event.end,
+        level: level
        };
       const cursor = new Date(start);
       while (cursor <= end) {
@@ -154,6 +156,11 @@ function renderYearGrid(dayStats, startDate) {
           b.textContent = `${trip} К`;
           badgeWrap.appendChild(b);
         }
+        if (thereLevelSaved(stat.tooltipData)) {
+          const overline = document.createElement("div");
+          overline.className = "day-overline saved-level";
+          dayEl.insertAdjacentElement('afterbegin', overline);
+        }
 
         dayEl.appendChild(badgeWrap);
         dayEl.classList.add("active");
@@ -185,11 +192,6 @@ function weekdayIndex(day) {
   return day === 0 ? 6 : day - 1;
 }
 
-function buildTooltipContent(full_name, events) {
-  let content = `<strong>${full_name}</strong><br/>`;
-  events.forEach((event) => {
-    content += `${event.type === "vacation" ? "Отпуск" : "Командировка"}: ${formatDate(new Date(event.start))} — ${formatDate(new Date(event.end))}<br/>`;
-  });
-
-  return content;
+function thereLevelSaved(tooltipData) {
+  return tooltipData.some(event => event.level === 'saved');
 }

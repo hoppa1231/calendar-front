@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   bindEvents();
   loadData();
+  console.log("Application initialized", state);
 });
 
 function bindEvents() {
@@ -300,7 +301,6 @@ function getEmployeesByDepartment() {
 }
 
 function getSelectedEmployeeIds() {
-  console.log("Getting selected employee IDs:", state.selectedEmployee, state.selectedDepartment);
   if (state.selectedEmployee) return [state.selectedEmployee];
   return getEmployeesByDepartment().map((emp) => emp.id);
 }
@@ -777,6 +777,13 @@ function createTooltip(data) {
             <span class="tooltip-item__full_name">${item.full_name}</span>
             <span class="tooltip-item__period">${startFormatted} — ${endFormatted}</span>
         `;
+        if (item.level === 'saved') {
+          console.log("Adding red circle for saved level");
+          const redCircle = document.createElement('div');
+          redCircle.classList.add('tooltip-item__red-circle');
+          tooltipItem.insertAdjacentElement('afterbegin', redCircle);
+        }
+
         let color;
         if (item.type === "vacation") { color = "--accent"; }
         else if (item.type === "business_trip") { color = "--accent-2"; }

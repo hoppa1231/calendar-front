@@ -38,6 +38,7 @@ export function buildMockCalendar(start, end, employees = MOCK_EMPLOYEES) {
         type: "vacation",
         start: toISO(vacStart),
         end: toISO(vacEnd <= endDate ? vacEnd : endDate),
+        level: idx % 2 === 0 ? "approved" : "saved",
       });
     }
 
@@ -48,6 +49,7 @@ export function buildMockCalendar(start, end, employees = MOCK_EMPLOYEES) {
         type: "business_trip",
         start: toISO(tripStart),
         end: toISO(tripEnd <= endDate ? tripEnd : endDate),
+        level: idx % 2 === 1 ? "approved" : "saved",
       });
     }
 
